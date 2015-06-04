@@ -19,7 +19,7 @@ public class ZeusAPITest
     //Add your token here
     //String token = "****Your_token***";
     //Here i am using token from the ZEUS_TOKEN environment variable
-    String token = System.getProperty("ZEUS_TOKEN");   
+    String token = System.getenv("ZEUS_TOKEN");   
  
     String testSeriesName = "testing";
     ZeusAPIClient zeusClient = new ZeusAPIClient(token);
