@@ -19,7 +19,7 @@ List All Metrics
 
 ```java
 Parameters params = new Parameters();
-#  params.add("metric_name", "regular expression to filtering result");
+// params.add("metric_name", "regular expression to filtering result");
 result = zeusClient.retrieveMetricNames(params);
 System.out.println(result);  # => ""
 ```
@@ -28,9 +28,9 @@ Get Metric
 
 ```java
 Parameters params = new Parameters();
-#  params.add("metric_name", "regular expression to filtering result");
+// params.add("metric_name", "regular expression to filtering result");
 result = zeusClient.retrieveMetricValues(params);
-System.out.println(result);  # => ""
+System.out.println(result);  // => ""
 ```
 
 Send Metrics
@@ -39,17 +39,17 @@ Send Metrics
 Metric metric = new Metric()
 metric.setColumns("col1", "col2", ...)
       .setValues(3, 3, ...)
-      .setValues(4, 4, ...)  # you can send multiple metrics
+      .setValues(4, 4, ...)  // you can send multiple metrics
       .build();
 String result = zeusClient.sendMetrics("your_metric_name_here", metric);
-System.out.println(result);  # => ""
+System.out.println(result);  // => ""
 ```
 
 Delete Metric
 
 ```java
 result = zeusClient.deleteMetrics("metric_name_here");
-System.out.println(result);  # => ""
+System.out.println(result);  // => ""
 ```
 
 
