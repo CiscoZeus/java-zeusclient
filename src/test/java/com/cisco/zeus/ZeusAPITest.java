@@ -16,7 +16,7 @@ import java.util.Iterator;
 
 public class ZeusAPITest 
 {
-    String token = "28edde36";
+    String token = "*****YOUR_TOKEN_HERE*****";
     String testSeriesName = "testing";
     @BeforeClass
     public static void oneTimeSetUp() {
@@ -52,7 +52,6 @@ public class ZeusAPITest
                 break;
             }
         }
-        System.out.println("Total datapoints"+length);
         return length;         
     }
 
@@ -60,7 +59,6 @@ public class ZeusAPITest
         JSONParser parser=new JSONParser();
         Object obj=parser.parse(result);
         JSONArray array=(JSONArray)obj;
-        System.out.println("Total metrics"+array.size());
         return array.size();         
     }
 
@@ -77,7 +75,6 @@ public class ZeusAPITest
                 break;
             }
         }
-        System.out.println("isPresent"+isPresent); 
         return isPresent;         
     }
 
