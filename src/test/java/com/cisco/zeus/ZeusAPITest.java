@@ -16,7 +16,7 @@ import java.util.Iterator;
 
 public class ZeusAPITest 
 {
-    String token = "28edde36";
+    String token = "*****YOUR_TOKEN_HERE*****";
     String testSeriesName = "testing";
     @BeforeClass
     public static void oneTimeSetUp() {
