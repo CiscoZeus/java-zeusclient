@@ -16,8 +16,14 @@ import java.util.Iterator;
 
 public class ZeusAPITest 
 {
-    String token = "*****YOUR_TOKEN_HERE*****";
+    //Add your token here
+    //String token = "****Your_token***";
+    //Here i am using token from the ZEUS_TOKEN environment variable
+    String token = System.getProperty("ZEUS_TOKEN");   
+ 
     String testSeriesName = "testing";
+    ZeusAPIClient zeusClient = new ZeusAPIClient(token);
+
     @BeforeClass
     public static void oneTimeSetUp() {
         // one-time initialization code   
@@ -27,9 +33,15 @@ public class ZeusAPITest
     @AfterClass
     public static void oneTimeTearDown() {
         // one-time cleanup code
-        System.out.println("oneTimeTearDown");
+        System.out.println("oneTimeTearDown: Zeus API Client testing completed");
     }
-    
+   
+    @After
+    public void tearDown() {
+        System.out.println("Deleting Metric"); 
+        String result = zeusClient.deleteMetrics(testSeriesName);
+    }
+ 
     public void sleep(int sec) {
         System.out.println("Sleeping for "+sec+" seconds");
         try {
@@ -39,8 +51,8 @@ public class ZeusAPITest
         }
     }
 
-    public int countDataPointsInMetric(String metricName, String result) throws ParseException {
-        int length = -1;
+    public long countDataPointsInMetric(String metricName, String result) throws ParseException {
+        long length = -1;
         JSONParser parser=new JSONParser();
         Object obj=parser.parse(result);
         JSONArray array=(JSONArray)obj;
@@ -49,6 +61,28 @@ public class ZeusAPITest
             JSONObject json = (JSONObject) (iterator.next());
             if((json.get("name")).equals(metricName)) {
                 length = ((JSONArray)json.get("points")).size();
+                break;
+            }
+        }
+        return length;         
+    }
+
+    public long countAggregateDataPointsInMetric(String metricName, String aggregateFn , String result) throws ParseException {
+        long length = -1;
+        JSONParser parser=new JSONParser();
+        Object obj=parser.parse(result);
+        JSONArray array=(JSONArray)obj;
+        Iterator<JSONObject> iterator = array.iterator();
+        while (iterator.hasNext()) {
+            JSONObject json = (JSONObject) (iterator.next());
+            if((json.get("name")).equals(metricName)) {
+                int aggregateIndex = ((JSONArray)json.get("columns")).indexOf(aggregateFn);
+                JSONArray arr = (JSONArray)json.get("points");
+                Iterator<JSONArray> itr = arr.iterator();
+                length = 0;
+                while (itr.hasNext()) {
+                    length += (long)((JSONArray) (itr.next())).get(aggregateIndex);
+                }
                 break;
             }
         }
@@ -81,7 +115,6 @@ public class ZeusAPITest
     @Test
     public void testSingleMetric() throws IOException, ParseException
     {
-        ZeusAPIClient zeusClient = new ZeusAPIClient(token);
         //send a single Metric to Zeus with only value field 
 
         //Each Metric is (timestamp, <list of columns>) pair in the system
@@ -95,7 +128,7 @@ public class ZeusAPITest
         String result = zeusClient.sendMetrics(testSeriesName, metric);
         System.out.println("Metric Sent: "+result);
 
-        sleep(3);
+        sleep(2);
 
         System.out.println("Retrieving Metric");
         Parameters params = new Parameters();
@@ -107,15 +140,100 @@ public class ZeusAPITest
         assertTrue(countDataPointsInMetric(testSeriesName, result) == 1);
         assertTrue(countTotalMetricNames(result) == 1);
     
-        System.out.println("Delete Metric"); 
-        result = zeusClient.deleteMetrics(testSeriesName);
-        System.out.println("Metric Delete: "+result);
     }
-   
-    @Test
+ 
+    @Test 
+    public void testGetMetricNames() throws IOException, ParseException
+    {
+        //send a single Metric to Zeus with only value field 
+
+        //Each Metric is (timestamp, <list of columns>) pair in the system
+        //If timestamp is omitted, system generated timestamp will be used
+        System.out.println("Sending Metric");
+        Metric metric = new Metric()
+                            .setColumns("col1","col2")
+                            .setValues(3,3)
+                            .build();
+        //It creates a series named testing with value 1001
+        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        System.out.println("Metric Sent: "+result);
+
+         Metric metric1 = new Metric()
+                            .setColumns("col3","col4")
+                            .setValues(4,4)
+                            .build();
+        //It creates a series named testing with value 1001
+        result = zeusClient.sendMetrics(testSeriesName+"1", metric1);
+        System.out.println("Metric Sent: "+result);
+
+
+        sleep(2);
+
+        System.out.println("Retrieving Metric");
+        Parameters params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        result = zeusClient.retrieveMetricNames(params);
+
+        System.out.println("Metric Got: "+result);
+        assertTrue(countTotalMetricNames(result) == 2);
+
+        System.out.println("Delete Metric"); 
+        result = zeusClient.deleteMetrics(testSeriesName+"1");
+        System.out.println("Metric Delete: "+result);
+            
+    }
+
+
+    @Test 
     public void testMultipleMetrics() throws IOException, ParseException
     {
-        ZeusAPIClient zeusClient = new ZeusAPIClient(token);
+        //send a single Metric to Zeus with only value field 
+
+        //Each Metric is (timestamp, <list of columns>) pair in the system
+        //If timestamp is omitted, system generated timestamp will be used
+        System.out.println("Sending Metric");
+        Metric metric = new Metric()
+                            .setColumns("col1","col2")
+                            .setValues(3,3)
+                            .build();
+        //It creates a series named testing with value 1001
+        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        System.out.println("Metric Sent: "+result);
+
+         Metric metric1 = new Metric()
+                            .setColumns("col3","col4")
+                            .setValues(4,4)
+                            .build();
+        //It creates a series named testing with value 1001
+        result = zeusClient.sendMetrics(testSeriesName+"1", metric1);
+        System.out.println("Metric Sent: "+result);
+
+
+        sleep(2);
+
+        System.out.println("Retrieving Metric");
+        Parameters params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        result = zeusClient.retrieveMetricValues(params);
+
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));        
+        assertTrue(isMetricNamePresent(testSeriesName+"1",result));        
+        assertTrue(countDataPointsInMetric(testSeriesName, result) == 1);
+        assertTrue(countDataPointsInMetric(testSeriesName+"1", result) == 1);
+        assertTrue(countTotalMetricNames(result) == 2);
+
+        System.out.println("Delete Metric"); 
+        result = zeusClient.deleteMetrics(testSeriesName+"1");
+        System.out.println("Metric Delete: "+result);
+            
+    }
+
+
+  
+    @Test
+    public void testMultipleDataPoints() throws IOException, ParseException
+    {
         //send mulitple Metrics to Zeus
 
         //Each Metric is (timestamp, <list of columns>) pair in the system
@@ -130,7 +248,7 @@ public class ZeusAPITest
         String result = zeusClient.sendMetrics(testSeriesName, metric);
         System.out.println("Metric Sent: "+result);
 
-        sleep(3);
+        sleep(2);
 
         System.out.println("Retrieving Metrics");
         Parameters params = new Parameters();
@@ -143,21 +261,15 @@ public class ZeusAPITest
         assertTrue(countDataPointsInMetric(testSeriesName, result) == 2);
         assertTrue(countTotalMetricNames(result) == 1);
 
-       
-        System.out.println("Delete Metric"); 
-        result = zeusClient.deleteMetrics(testSeriesName);
-        System.out.println("Metric Delete: "+result);
-        
     }
 
     @Test
-    public void testMultipleMetricsWithTimestamps() throws IOException, ParseException
+    public void testMultipleDataPointsWithTimestamps() throws IOException, ParseException
     {
-        ZeusAPIClient zeusClient = new ZeusAPIClient(token);
         //send mulitple Metrics to Zeus
 
         //Each Metric is (timestamp, <list of columns>) pair in the system
-        //If timestamp is omitted, system generated timestamp will be used
+        //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
         Metric metric = new Metric()
                             .setColumns("timestamp","col1","col2")
@@ -168,7 +280,7 @@ public class ZeusAPITest
         String result = zeusClient.sendMetrics(testSeriesName, metric);
         System.out.println("Metric Sent: "+result);
 
-        sleep(3);
+        sleep(2);
 
         System.out.println("Retrieving Metrics");
         Parameters params = new Parameters();
@@ -181,11 +293,210 @@ public class ZeusAPITest
         assertTrue(countDataPointsInMetric(testSeriesName, result) == 2);
         assertTrue(countTotalMetricNames(result) == 1);
 
-       
-        System.out.println("Delete Metric"); 
-        result = zeusClient.deleteMetrics(testSeriesName);
-        System.out.println("Metric Delete: "+result);
+    }
+
+
+    @Test
+    public void testMetricAggregation() throws IOException, ParseException
+    {
+        //send mulitple Metrics to Zeus
+
+        //Each Metric is (timestamp, <list of columns>) pair in the system
+        //Timestamp can be supplied with "timestamp" column
+        System.out.println("Sending Metrics");
+        Metric metric = new Metric()
+                            .setColumns("timestamp","col1","col2")
+                            .setValues(1433198001,3,3)
+                            .setValues(1433198121,4,4)
+                            .setValues(1433198241,5,5)
+                            .setValues(1433198361,6,6)
+                            .setValues(1433198481,7,7)
+                            .build();
+        //It creates a series named testing with value 1001
+        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        System.out.println("Metric Sent: "+result);
+
+        sleep(2);
+
+        System.out.println("Retrieving Metrics");
+        Parameters params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        params.add("aggregator_function","count");
+        params.add("aggregator_column","col1");
+        params.add("group_interval","5m");
+        result = zeusClient.retrieveMetricValues(params);
+
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));        
+        assertTrue(countAggregateDataPointsInMetric(testSeriesName, "count", result) == 5);
+        assertTrue(countTotalMetricNames(result) == 1);
+
+    }
+
+    @Test
+    public void testMetricOffsetAndLimit() throws IOException, ParseException
+    {
+        //send mulitple Metrics to Zeus
+
+        //Each Metric is (timestamp, <list of columns>) pair in the system
+        //Timestamp can be supplied with "timestamp" column
+        System.out.println("Sending Metrics");
+        Metric metric = new Metric()
+                            .setColumns("timestamp","col1","col2")
+                            .setValues(1433198001,3,3)
+                            .setValues(1433198121,4,4)
+                            .setValues(1433198241,5,5)
+                            .setValues(1433198361,6,6)
+                            .setValues(1433198481,7,7)
+                            .build();
+        //It creates a series named testing with value 1001
+        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        System.out.println("Metric Sent: "+result);
+
+        sleep(2);
+
+        System.out.println("Retrieving Metrics");
+        Parameters params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        params.add("limit",3);
+        result = zeusClient.retrieveMetricValues(params);
+
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));        
+        assertTrue(countDataPointsInMetric(testSeriesName, result) == 3);
+        assertTrue(countTotalMetricNames(result) == 1);
+
+ 
+        System.out.println("Retrieving Metrics");
+        params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        params.add("offset",1);
+        result = zeusClient.retrieveMetricValues(params);
+
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));        
+        assertTrue(countDataPointsInMetric(testSeriesName, result) == 4);
+        assertTrue(countTotalMetricNames(result) == 1);      
+
+
+        System.out.println("Retrieving Metrics");
+        params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        params.add("offset",1);
+        params.add("limit",3);
+        result = zeusClient.retrieveMetricValues(params);
+
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));        
+        assertTrue(countDataPointsInMetric(testSeriesName, result) == 3);
+        assertTrue(countTotalMetricNames(result) == 1);
+
         
     }
+
+    @Test
+    public void testMetricFilterTimestamp() throws IOException, ParseException
+    {
+        //send mulitple Metrics to Zeus
+
+        //Each Metric is (timestamp, <list of columns>) pair in the system
+        //Timestamp can be supplied with "timestamp" column
+        System.out.println("Sending Metrics");
+        Metric metric = new Metric()
+                            .setColumns("timestamp","col1","col2")
+                            .setValues(1433198001,3,3)
+                            .setValues(1433198121,4,4)
+                            .setValues(1433198241,5,5)
+                            .setValues(1433198361,6,6)
+                            .setValues(1433198481,7,7)
+                            .build();
+        //It creates a series named testing with value 1001
+        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        System.out.println("Metric Sent: "+result);
+
+        sleep(2);
+
+        System.out.println("Retrieving Metrics");
+        Parameters params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        params.add("from",1433198121);
+        params.add("to",1433198361);
+        result = zeusClient.retrieveMetricValues(params);
+
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));        
+        assertTrue(countDataPointsInMetric(testSeriesName, result) == 3);
+        assertTrue(countTotalMetricNames(result) == 1);
+
+        params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        params.add("from",1433198121);
+        result = zeusClient.retrieveMetricValues(params);
+
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));
+        assertTrue(countDataPointsInMetric(testSeriesName, result) == 4);
+        assertTrue(countTotalMetricNames(result) == 1);
+
+        params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        params.add("from",1433198121.100);
+        result = zeusClient.retrieveMetricValues(params);
+
+        sleep(2);
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));
+        assertTrue(countDataPointsInMetric(testSeriesName, result) == 3);
+        assertTrue(countTotalMetricNames(result) == 1);
+
+        params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        params.add("from",1433198121.100);
+        params.add("to",1433198360.989);
+        result = zeusClient.retrieveMetricValues(params);
+
+        sleep(2);
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));
+        assertTrue(countDataPointsInMetric(testSeriesName, result) == 1);
+        assertTrue(countTotalMetricNames(result) == 1);
+
+    }
+
+    @Test
+    public void testMetricFilterCondition() throws IOException, ParseException
+    {
+        //send mulitple Metrics to Zeus
+
+        //Each Metric is (timestamp, <list of columns>) pair in the system
+        //Timestamp can be supplied with "timestamp" column
+        System.out.println("Sending Metrics");
+        Metric metric = new Metric()
+                            .setColumns("timestamp","col1","col2")
+                            .setValues(1433198001,3,3)
+                            .setValues(1433198121,4,4)
+                            .setValues(1433198241,5,5)
+                            .setValues(1433198361,6,6)
+                            .setValues(1433198481,7,7)
+                            .build();
+        //It creates a series named testing with value 1001
+        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        System.out.println("Metric Sent: "+result);
+
+        sleep(2);
+
+        System.out.println("Retrieving Metrics");
+        Parameters params = new Parameters();
+        params.add("metric_name",testSeriesName);
+        params.add("filter_condition","col1 > 4 and col2 < 7");
+        result = zeusClient.retrieveMetricValues(params);
+
+        System.out.println("Metric Got: "+result);
+        assertTrue(isMetricNamePresent(testSeriesName,result));        
+        assertTrue(countDataPointsInMetric(testSeriesName, result) == 2);
+        assertTrue(countTotalMetricNames(result) == 1);
+
+    }
+
 
 }
