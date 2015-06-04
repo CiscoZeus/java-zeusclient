@@ -15,19 +15,8 @@ public class MetricList {
         list.add(metric.data);
     }
 
-
-    public void add(double timestamp, double value) {
-        Metric metric = new Metric(timestamp,value);
-        list.add(metric.data);
-    }
-    
-    public void add(double value) {
-        Metric metric = new Metric(value);
-        list.add(metric.data);
-    }    
-
-    public void clear(){
-        list = new JSONArray();
+    public void add(Metric metric){
+        list.add(metric.data.clone());
     }
 
     @Override

@@ -14,6 +14,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder; 
 import org.apache.http.message.BasicNameValuePair;
@@ -47,13 +48,14 @@ public class ZeusAPIClient {
         catch(Exception e) {
             System.out.println(" Exception Raised in Sending Metrics"+ e.getMessage());
          }
-        list.clear();
+        //list.clear();
         return ret;
     }
 
     public String sendMetrics(String tag, Metric metric){
-        MetricList metricList = new MetricList(metric);
-        return sendMetrics(tag, metricList);
+        //MetricList metricList = new MetricList();
+        //metricList.add(metric);
+        return sendMetrics(tag, metric.list);
     }
 
     public String sendLogs(String tag, Log log){
@@ -105,6 +107,16 @@ public class ZeusAPIClient {
          return ret;
     }
 
+    public String deleteMetrics(String tag){
+        String ret = "" ;
+        try {
+            ret = deleteRequest("/metrics/" + token + "/"+ tag + "/");
+        }
+        catch(Exception e) {
+            System.out.println(" Exception Raised in deleting Metrics"+ e.getMessage());
+         }
+         return ret;
+    }
     public String retrieveLogs(Parameters params){
         String ret = "" ;
         //add data from logs
@@ -181,7 +193,6 @@ public class ZeusAPIClient {
     List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
     while(i.hasNext()) {
          Map.Entry me = (Map.Entry)i.next();
-         //System.out.println(me.getKey().toString() + " " +me.getValue().toString());
          urlParameters.add(new BasicNameValuePair(me.getKey().toString(), me.getValue().toString()));
     }
     post.setEntity(new UrlEncodedFormEntity(urlParameters));
@@ -200,5 +211,37 @@ public class ZeusAPIClient {
     }
     //System.out.println(result);
     return result.toString();
+    }
+
+
+    // HTTP Delete request
+    private String deleteRequest(String path) throws Exception {
+
+        String url = ZEUS_API + path;
+
+        URL obj = new URL(url);
+
+        System.out.println(" Url "+url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpDelete request = new HttpDelete(url);
+
+        // add request header
+        request.addHeader("User-Agent", USER_AGENT);
+        //request.setHeader("Authorization", "Bearer " + token);
+        HttpResponse response = client.execute(request);
+
+        System.out.println("Response Code : "
+                + response.getStatusLine().getStatusCode());
+
+         BufferedReader rd = new BufferedReader(
+            new InputStreamReader(response.getEntity().getContent()));
+
+        StringBuffer result = new StringBuffer();
+        String line = "";
+        while ((line = rd.readLine()) != null) {
+            result.append(line);
+        }
+        //System.out.println(result);
+        return result.toString();
     }
 }
