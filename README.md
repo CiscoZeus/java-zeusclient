@@ -72,14 +72,22 @@ Log log1 = new Log()
             .setKeyValues("key3","value3")
             .setKeyValues("key4","value4");
 
-LogList loglist = new LogList("your_log_name_here)
+LogList loglist = new LogList("your_log_name_here")
                   .addLog(log)
                   .addLog(log1);
 String result = zeusClient.sendLogs(loglist);
 System.out.println(result);  # => ""
 ```
-## Example
-Please refer to test files
+## How to get started
+Refer src/examples/ZeusSampleClient.java for a quick introduction. 
+Edit the file to add your assigned Zeus access token and execute the following commands to post/get sample logs & metrics.
+
+```
+mvn compile
+mvn -q exec:java -Dexec.mainClass="com.cisco.zeus.ZeusSampleClient"
+```
+
+For more advanced options and examples, refer files in the src/test directory.
 
 ## Contributing
 
