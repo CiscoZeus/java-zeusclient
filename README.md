@@ -63,7 +63,7 @@ System.out.println(result);
 ###Logs
 
 #####Post Logs
-Log name has to start with an alphanumerical variable and it can contain hyphen(-), dot(.) and underscore(_)
+Log name must contain only alphanumerical characters.
 
 ```java
 Log log = new Log()
