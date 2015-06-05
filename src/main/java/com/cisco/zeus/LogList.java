@@ -20,19 +20,11 @@ public class LogList {
         list.add(log.data);
         return this;
     }
-
-
-/*
-    public void add(double timestamp, String message) {
-        Log log = new Log(timestamp,message);
-        list.add(log.data);
-    }
     
-    public void add(String message) {
-        Log log = new Log(message);
-        list.add(log.data);
-    }    
-*/
+    public LogList build(){
+        return this;
+    }
+
     public void clear(){
         list = new JSONArray();
     }

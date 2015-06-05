@@ -49,7 +49,7 @@ public class ZeusAPIClient {
         catch(Exception e) {
             System.out.println(" Exception Raised in Sending Metrics"+ e.getMessage());
          }
-        //list.clear();
+        list.clear();
         return ret;
     }
 
@@ -163,7 +163,7 @@ public class ZeusAPIClient {
         while ((line = rd.readLine()) != null) {
             result.append(line);
         }
-        System.out.println(result);
+        //System.out.println(result);
         return result.toString(); 
     }
  
@@ -199,7 +199,7 @@ public class ZeusAPIClient {
     while ((line = rd.readLine()) != null) {
         result.append(line);
     }
-    System.out.println(result);
+    //System.out.println(result);
     return result.toString();
     }
 

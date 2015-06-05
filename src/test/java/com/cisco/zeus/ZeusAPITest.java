@@ -12,8 +12,11 @@ import java.util.Iterator;
 
 public class ZeusAPITest 
 {
-    //Add your token here
-    String token = "***YOUR_TOKEN***";
+
+    /////////////////////////////////////// 
+    //Edit the below line to add your token
+    //////////////////////////////////////
+    String token = "Your_token_here";
  
     String testSeriesName = "testing";
     String testLogName = "testing";
@@ -115,7 +118,8 @@ public class ZeusAPITest
                         .setKeyValues("key2","value2");
 
         LogList loglist = new LogList(testLogName)
-                        .addLog(log);
+                        .addLog(log)
+                        .build();
 
         String result = zeusClient.sendLogs(loglist);
         System.out.println("Logs Sent: "+result);
@@ -141,7 +145,8 @@ public class ZeusAPITest
 
         LogList loglist = new LogList(testLogName+"3")
                         .addLog(log)
-                        .addLog(log1);
+                        .addLog(log1)
+                        .build();
 
         String result = zeusClient.sendLogs(loglist);
         System.out.println("Logs Sent: "+result);
@@ -163,8 +168,8 @@ public class ZeusAPITest
         //If timestamp is omitted, system generated timestamp will be used
         System.out.println("Sending Metric");
         MetricList metric = new MetricList(testSeriesName)
-                            .setColumns("col1","col2")
-                            .setValues(3,3)
+                            .addColumns("col1","col2")
+                            .addValues(3,3)
                             .build();
         
         String result = zeusClient.sendMetrics(metric);
@@ -193,16 +198,16 @@ public class ZeusAPITest
         //If timestamp is omitted, system generated timestamp will be used
         System.out.println("Sending Metric");
         MetricList metric = new MetricList(testSeriesName)
-                            .setColumns("col1","col2")
-                            .setValues(3,3)
+                            .addColumns("col1","col2")
+                            .addValues(3,3)
                             .build();
         
         String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
          MetricList metric1 = new MetricList(testSeriesName+"1")
-                            .setColumns("col3","col4")
-                            .setValues(4,4)
+                            .addColumns("col3","col4")
+                            .addValues(4,4)
                             .build();
         
         result = zeusClient.sendMetrics(metric1);
@@ -235,16 +240,16 @@ public class ZeusAPITest
         //If timestamp is omitted, system generated timestamp will be used
         System.out.println("Sending Metric");
         MetricList metric = new MetricList(testSeriesName)
-                            .setColumns("col1","col2")
-                            .setValues(3,3)
+                            .addColumns("col1","col2")
+                            .addValues(3,3)
                             .build();
         
         String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
         MetricList metric1 = new MetricList(testSeriesName+"1")
-                            .setColumns("col3","col4")
-                            .setValues(4,4)
+                            .addColumns("col3","col4")
+                            .addValues(4,4)
                             .build();
         
         result = zeusClient.sendMetrics(metric1);
@@ -282,9 +287,9 @@ public class ZeusAPITest
         //If timestamp is omitted, system generated timestamp will be used
         System.out.println("Sending Metrics");
         MetricList metric = new MetricList(testSeriesName)
-                            .setColumns("col1","col2")
-                            .setValues(3,3)
-                            .setValues(4,4)
+                            .addColumns("col1","col2")
+                            .addValues(3,3)
+                            .addValues(4,4)
                             .build();
         
         String result = zeusClient.sendMetrics(metric);
@@ -314,9 +319,9 @@ public class ZeusAPITest
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
         MetricList metric = new MetricList(testSeriesName)
-                            .setColumns("timestamp","col1","col2")
-                            .setValues(1423034086.343,3,3)
-                            .setValues(1423034089,4,4)
+                            .addColumns("timestamp","col1","col2")
+                            .addValues(1423034086.343,3,3)
+                            .addValues(1423034089,4,4)
                             .build();
         
         String result = zeusClient.sendMetrics(metric);
@@ -347,12 +352,12 @@ public class ZeusAPITest
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
         MetricList metric = new MetricList(testSeriesName)
-                            .setColumns("timestamp","col1","col2")
-                            .setValues(1433198001,3,3)
-                            .setValues(1433198121,4,4)
-                            .setValues(1433198241,5,5)
-                            .setValues(1433198361,6,6)
-                            .setValues(1433198481,7,7)
+                            .addColumns("timestamp","col1","col2")
+                            .addValues(1433198001,3,3)
+                            .addValues(1433198121,4,4)
+                            .addValues(1433198241,5,5)
+                            .addValues(1433198361,6,6)
+                            .addValues(1433198481,7,7)
                             .build();
         
         String result = zeusClient.sendMetrics(metric);
@@ -384,12 +389,12 @@ public class ZeusAPITest
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
         MetricList metric = new MetricList(testSeriesName)
-                            .setColumns("timestamp","col1","col2")
-                            .setValues(1433198001,3,3)
-                            .setValues(1433198121,4,4)
-                            .setValues(1433198241,5,5)
-                            .setValues(1433198361,6,6)
-                            .setValues(1433198481,7,7)
+                            .addColumns("timestamp","col1","col2")
+                            .addValues(1433198001,3,3)
+                            .addValues(1433198121,4,4)
+                            .addValues(1433198241,5,5)
+                            .addValues(1433198361,6,6)
+                            .addValues(1433198481,7,7)
                             .build();
         
         String result = zeusClient.sendMetrics(metric);
@@ -445,12 +450,12 @@ public class ZeusAPITest
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
         MetricList metric = new MetricList(testSeriesName)
-                            .setColumns("timestamp","col1","col2")
-                            .setValues(1433198001,3,3)
-                            .setValues(1433198121,4,4)
-                            .setValues(1433198241,5,5)
-                            .setValues(1433198361,6,6)
-                            .setValues(1433198481,7,7)
+                            .addColumns("timestamp","col1","col2")
+                            .addValues(1433198001,3,3)
+                            .addValues(1433198121,4,4)
+                            .addValues(1433198241,5,5)
+                            .addValues(1433198361,6,6)
+                            .addValues(1433198481,7,7)
                             .build();
         
         String result = zeusClient.sendMetrics(metric);
@@ -514,12 +519,12 @@ public class ZeusAPITest
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
         MetricList metric = new MetricList(testSeriesName)
-                            .setColumns("timestamp","col1","col2")
-                            .setValues(1433198001,3,3)
-                            .setValues(1433198121,4,4)
-                            .setValues(1433198241,5,5)
-                            .setValues(1433198361,6,6)
-                            .setValues(1433198481,7,7)
+                            .addColumns("timestamp","col1","col2")
+                            .addValues(1433198001,3,3)
+                            .addValues(1433198121,4,4)
+                            .addValues(1433198241,5,5)
+                            .addValues(1433198361,6,6)
+                            .addValues(1433198481,7,7)
                             .build();
         
         String result = zeusClient.sendMetrics(metric);

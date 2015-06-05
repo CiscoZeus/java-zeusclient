@@ -8,7 +8,6 @@ import java.io.IOException;
 
 
 public class MetricList {
-    JSONObject data = new JSONObject();
     List<String> columnNames = new ArrayList<String>();
     List<List<Double>> columnValues = new ArrayList<List<Double>>();
     String metricName = "";
@@ -18,14 +17,15 @@ public class MetricList {
         metricName = name;
     }
 
-    public MetricList setColumns(String... cols){
+    public MetricList addColumns(String... cols){
+        columnNames = new ArrayList<String>();
         for(String col : cols) {
             columnNames.add(col);
         }
         return this;
     }
 
-    public MetricList setValues(double... values){
+    public MetricList addValues(double... values){
         List<Double> entry = new ArrayList<Double>();
  
         for(double value : values) {
@@ -41,6 +41,7 @@ public class MetricList {
         double timestamp = 0; 
         for (int valueCount = 0; valueCount < columnValues.size(); valueCount++)
         {
+            JSONObject data = new JSONObject();
             if(columnNames.size() !=  columnValues.get(valueCount).size())
                 throw new IOException("Column name size and column value size do not match");
             for (int i = 0; i < columnNames.size(); i++) {
@@ -59,10 +60,13 @@ public class MetricList {
             }
             data = datapoint;
             list.add(data.clone());
-            data.clear(); 
-
         }
         return this;
+    }
+
+    public void clear(){
+        list = new JSONArray();
+        columnValues = new ArrayList<List<Double>>();
     }
 
     @Override
