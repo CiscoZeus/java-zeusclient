@@ -16,7 +16,8 @@ public class ZeusAPITest
     /////////////////////////////////////// 
     //Edit the below line to add your token
     //////////////////////////////////////
-    String token = "Your_token_here";
+    //String token = "Your_token_here";
+    String token = System.getenv("ZEUS_TOKEN");
  
     String testSeriesName = "testing";
     String testLogName = "testing";
@@ -115,8 +116,8 @@ public class ZeusAPITest
     {
         Log log = new Log()
                         .setKeyValues("key1","value1")
-                        .setKeyValues("key2","value2");
-
+                        .setKeyValues("key2","value2")
+                        .build();
         LogList loglist = new LogList(testLogName)
                         .addLog(log)
                         .build();
@@ -137,12 +138,14 @@ public class ZeusAPITest
     {
         Log log = new Log()
                         .setKeyValues("key1","value1")
-                        .setKeyValues("key2","value2");
+                        .setKeyValues("key2","value2")
+                        .build();
 
         Log log1 = new Log()
                         .setKeyValues("key3","value3")
-                        .setKeyValues("key4","value4");
-
+                        .setKeyValues("key4","value4")
+                        .build();
+        
         LogList loglist = new LogList(testLogName+"3")
                         .addLog(log)
                         .addLog(log1)

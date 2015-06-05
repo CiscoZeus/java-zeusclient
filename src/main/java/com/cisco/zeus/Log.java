@@ -8,35 +8,24 @@ import java.io.IOException;
 
 public class Log {
     JSONObject data = new JSONObject();
-    //String logName ="";
+    boolean mutable = true;
 
-    /*
-    public Log(String name) {
-        logName = name
-    }
-    
-    public Log(double timestamp, String message) {
-        data.put("timestamp",timestamp);
-        data.put("message",message);
-    }
-
-    public Log setValue(String message){
-        data.put("message",message);
+    public Log setKeyValues(String key, Object value) throws IOException{
+        if(!mutable) {
+            throw new IOException("Log object is immutable");
+        }
+        data.put(key,value);
         return this;
     }
 
-     public Log setTimestamp(double timestamp){
-        data.put("timestamp",timestamp);
+    /*
+    public Log setKeyValues(String key, double value){
+        data.put(key,value);
         return this;
     }*/
 
-    public Log setKeyValues(String key, String value){
-        data.put(key,value);
-        return this;
-    }
-
-    public Log setKeyValues(String key, double value){
-        data.put(key,value);
+    public Log build() {
+        mutable = false;
         return this;
     }
 

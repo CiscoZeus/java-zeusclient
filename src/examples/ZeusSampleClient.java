@@ -58,7 +58,9 @@ public class ZeusSampleClient
         System.out.println("Sending a log with log name: zeus-test");
         Log log = new Log()
             .setKeyValues("key1","value1")
-            .setKeyValues("key2","value2");
+            .setKeyValues("key2","value2")
+            .setKeyValues("key3",100.01)
+            .build();
 
         LogList loglist = new LogList("zeus-test")
                   .addLog(log)
@@ -71,11 +73,14 @@ public class ZeusSampleClient
 
         Log log1 = new Log()
             .setKeyValues("key3","value33")
-            .setKeyValues("key4","value34");
+            .setKeyValues("key4","value34")
+            .setKeyValues("key5",34)
+            .build();
         
         Log log2 = new Log()
             .setKeyValues("key1","value11")
-            .setKeyValues("key4","value14");
+            .setKeyValues("key4","value14")
+            .build();
         
         loglist.addLog(log1)
                .addLog(log2)        
