@@ -1,9 +1,5 @@
 package com.cisco.zeus;
 
-//import junit.framework.Test;
-//import junit.framework.TestCase;
-//import junit.framework.TestSuite;
-
 import org.junit.*;
 import static org.junit.Assert.*;
 import java.io.IOException;
@@ -17,11 +13,10 @@ import java.util.Iterator;
 public class ZeusAPITest 
 {
     //Add your token here
-    //String token = "****Your_token***";
-    //Here i am using token from the ZEUS_TOKEN environment variable
-    String token = System.getenv("ZEUS_TOKEN");   
+    String token = "***YOUR_TOKEN***";
  
     String testSeriesName = "testing";
+    String testLogName = "testing";
     ZeusAPIClient zeusClient = new ZeusAPIClient(token);
 
     @BeforeClass
@@ -113,6 +108,53 @@ public class ZeusAPITest
     }
 
     @Test
+    public void testSingleLog() throws IOException
+    {
+        Log log = new Log()
+                        .setKeyValues("key1","value1")
+                        .setKeyValues("key2","value2");
+
+        LogList loglist = new LogList(testLogName)
+                        .addLog(log);
+
+        String result = zeusClient.sendLogs(loglist);
+        System.out.println("Logs Sent: "+result);
+
+        sleep(2);
+        Parameters params = new Parameters();
+        params.add("log_name",testLogName);
+        result = zeusClient.retrieveLogs(params);
+        System.out.println("Logs Got: "+result);        
+
+    }
+
+    @Test
+    public void testMultipleLogs() throws IOException
+    {
+        Log log = new Log()
+                        .setKeyValues("key1","value1")
+                        .setKeyValues("key2","value2");
+
+        Log log1 = new Log()
+                        .setKeyValues("key3","value3")
+                        .setKeyValues("key4","value4");
+
+        LogList loglist = new LogList(testLogName+"3")
+                        .addLog(log)
+                        .addLog(log1);
+
+        String result = zeusClient.sendLogs(loglist);
+        System.out.println("Logs Sent: "+result);
+
+        sleep(2);
+
+        Parameters params = new Parameters();
+        params.add("log_name",testLogName+"3");
+        result = zeusClient.retrieveLogs(params);
+        System.out.println("Logs Got: "+result);        
+    }
+
+    @Test
     public void testSingleMetric() throws IOException, ParseException
     {
         //send a single Metric to Zeus with only value field 
@@ -120,12 +162,12 @@ public class ZeusAPITest
         //Each Metric is (timestamp, <list of columns>) pair in the system
         //If timestamp is omitted, system generated timestamp will be used
         System.out.println("Sending Metric");
-        Metric metric = new Metric()
+        MetricList metric = new MetricList(testSeriesName)
                             .setColumns("col1","col2")
                             .setValues(3,3)
                             .build();
-        //It creates a series named testing with value 1001
-        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        
+        String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
         sleep(2);
@@ -150,20 +192,20 @@ public class ZeusAPITest
         //Each Metric is (timestamp, <list of columns>) pair in the system
         //If timestamp is omitted, system generated timestamp will be used
         System.out.println("Sending Metric");
-        Metric metric = new Metric()
+        MetricList metric = new MetricList(testSeriesName)
                             .setColumns("col1","col2")
                             .setValues(3,3)
                             .build();
-        //It creates a series named testing with value 1001
-        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        
+        String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
-         Metric metric1 = new Metric()
+         MetricList metric1 = new MetricList(testSeriesName+"1")
                             .setColumns("col3","col4")
                             .setValues(4,4)
                             .build();
-        //It creates a series named testing with value 1001
-        result = zeusClient.sendMetrics(testSeriesName+"1", metric1);
+        
+        result = zeusClient.sendMetrics(metric1);
         System.out.println("Metric Sent: "+result);
 
 
@@ -192,20 +234,20 @@ public class ZeusAPITest
         //Each Metric is (timestamp, <list of columns>) pair in the system
         //If timestamp is omitted, system generated timestamp will be used
         System.out.println("Sending Metric");
-        Metric metric = new Metric()
+        MetricList metric = new MetricList(testSeriesName)
                             .setColumns("col1","col2")
                             .setValues(3,3)
                             .build();
-        //It creates a series named testing with value 1001
-        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        
+        String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
-         Metric metric1 = new Metric()
+        MetricList metric1 = new MetricList(testSeriesName+"1")
                             .setColumns("col3","col4")
                             .setValues(4,4)
                             .build();
-        //It creates a series named testing with value 1001
-        result = zeusClient.sendMetrics(testSeriesName+"1", metric1);
+        
+        result = zeusClient.sendMetrics(metric1);
         System.out.println("Metric Sent: "+result);
 
 
@@ -232,20 +274,20 @@ public class ZeusAPITest
 
   
     @Test
-    public void testMultipleDataPoints() throws IOException, ParseException
+    public void testMultipleDataPointsWithoutTimestamps() throws IOException, ParseException
     {
         //send mulitple Metrics to Zeus
 
         //Each Metric is (timestamp, <list of columns>) pair in the system
         //If timestamp is omitted, system generated timestamp will be used
         System.out.println("Sending Metrics");
-        Metric metric = new Metric()
+        MetricList metric = new MetricList(testSeriesName)
                             .setColumns("col1","col2")
                             .setValues(3,3)
                             .setValues(4,4)
                             .build();
-        //It creates a series named testing with value 1001
-        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        
+        String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
         sleep(2);
@@ -271,13 +313,13 @@ public class ZeusAPITest
         //Each Metric is (timestamp, <list of columns>) pair in the system
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
-        Metric metric = new Metric()
+        MetricList metric = new MetricList(testSeriesName)
                             .setColumns("timestamp","col1","col2")
                             .setValues(1423034086.343,3,3)
                             .setValues(1423034089,4,4)
                             .build();
-        //It creates a series named testing with value 1001
-        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        
+        String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
         sleep(2);
@@ -304,7 +346,7 @@ public class ZeusAPITest
         //Each Metric is (timestamp, <list of columns>) pair in the system
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
-        Metric metric = new Metric()
+        MetricList metric = new MetricList(testSeriesName)
                             .setColumns("timestamp","col1","col2")
                             .setValues(1433198001,3,3)
                             .setValues(1433198121,4,4)
@@ -312,8 +354,8 @@ public class ZeusAPITest
                             .setValues(1433198361,6,6)
                             .setValues(1433198481,7,7)
                             .build();
-        //It creates a series named testing with value 1001
-        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        
+        String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
         sleep(2);
@@ -336,12 +378,12 @@ public class ZeusAPITest
     @Test
     public void testMetricOffsetAndLimit() throws IOException, ParseException
     {
-        //send mulitple Metrics to Zeus
+        //send multiple Metrics to Zeus
 
         //Each Metric is (timestamp, <list of columns>) pair in the system
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
-        Metric metric = new Metric()
+        MetricList metric = new MetricList(testSeriesName)
                             .setColumns("timestamp","col1","col2")
                             .setValues(1433198001,3,3)
                             .setValues(1433198121,4,4)
@@ -349,8 +391,8 @@ public class ZeusAPITest
                             .setValues(1433198361,6,6)
                             .setValues(1433198481,7,7)
                             .build();
-        //It creates a series named testing with value 1001
-        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        
+        String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
         sleep(2);
@@ -402,7 +444,7 @@ public class ZeusAPITest
         //Each Metric is (timestamp, <list of columns>) pair in the system
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
-        Metric metric = new Metric()
+        MetricList metric = new MetricList(testSeriesName)
                             .setColumns("timestamp","col1","col2")
                             .setValues(1433198001,3,3)
                             .setValues(1433198121,4,4)
@@ -410,8 +452,8 @@ public class ZeusAPITest
                             .setValues(1433198361,6,6)
                             .setValues(1433198481,7,7)
                             .build();
-        //It creates a series named testing with value 1001
-        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        
+        String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
         sleep(2);
@@ -471,7 +513,7 @@ public class ZeusAPITest
         //Each Metric is (timestamp, <list of columns>) pair in the system
         //Timestamp can be supplied with "timestamp" column
         System.out.println("Sending Metrics");
-        Metric metric = new Metric()
+        MetricList metric = new MetricList(testSeriesName)
                             .setColumns("timestamp","col1","col2")
                             .setValues(1433198001,3,3)
                             .setValues(1433198121,4,4)
@@ -479,8 +521,8 @@ public class ZeusAPITest
                             .setValues(1433198361,6,6)
                             .setValues(1433198481,7,7)
                             .build();
-        //It creates a series named testing with value 1001
-        String result = zeusClient.sendMetrics(testSeriesName, metric);
+        
+        String result = zeusClient.sendMetrics(metric);
         System.out.println("Metric Sent: "+result);
 
         sleep(2);

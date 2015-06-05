@@ -7,15 +7,22 @@ import org.json.simple.JSONArray;
 public class LogList {
     
     JSONArray list = new JSONArray();
-
-    public LogList(){
+    String logName = "";
+    public LogList(String name){
+        logName = name;
     }
 
     public LogList(Log log){
         list.add(log.data);
     }
 
+    public LogList addLog(Log log){
+        list.add(log.data);
+        return this;
+    }
 
+
+/*
     public void add(double timestamp, String message) {
         Log log = new Log(timestamp,message);
         list.add(log.data);
@@ -25,7 +32,7 @@ public class LogList {
         Log log = new Log(message);
         list.add(log.data);
     }    
-
+*/
     public void clear(){
         list = new JSONArray();
     }
