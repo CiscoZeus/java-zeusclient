@@ -30,9 +30,9 @@ Metric name has to start with an alphanumerical variable and it can contain hyph
 
 ```java
 MetricList metric = new MetricList("your_metric_name_here");
-metric.setColumns("col1", "col2", ...)
-      .setValues(3, 3, ...)
-      .setValues(4, 4, ...)  // you can send multiple metrics
+metric.addColumns("col1", "col2", ...)
+      .addValues(3, 3, ...)
+      .addValues(4, 4, ...)  // you can send multiple metrics
       .build();
 String result = zeusClient.sendMetrics(metric);
 System.out.println(result);
