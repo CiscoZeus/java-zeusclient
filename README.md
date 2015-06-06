@@ -2,6 +2,9 @@
 
 ![Alt text](/docs/images/zeus-logo.png?raw=true "Zeus Logo")
 
+[![Build Status](https://travis-ci.org/CiscoZeus/java-zeusclient.svg)](https://travis-ci.org/CiscoZeus/java-zeusclient) 
+
+
 Java client for [Cisco Zeus](http://www.ciscozeus.io/). This allows us to send and receive data to and from Zeus.
 
 
