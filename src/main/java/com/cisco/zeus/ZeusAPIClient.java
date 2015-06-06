@@ -143,7 +143,7 @@ public class ZeusAPIClient {
         String queryString = URLEncodedUtils.format(parameters, "utf-8");
         url += queryString;
 
-        System.out.println(" Url "+url);
+        //System.out.println(" Url "+url);
         HttpClient client = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet(url);
  
@@ -152,8 +152,8 @@ public class ZeusAPIClient {
         //request.setHeader("Authorization", "Bearer " + token);
         HttpResponse response = client.execute(request);
  
-        System.out.println("Response Code : " 
-                + response.getStatusLine().getStatusCode());
+        //System.out.println("Response Code : " 
+        //        + response.getStatusLine().getStatusCode());
  
         BufferedReader rd = new BufferedReader(
             new InputStreamReader(response.getEntity().getContent()));
@@ -170,7 +170,7 @@ public class ZeusAPIClient {
     // HTTP POST request
     private String postRequest(String url, HashMap<String,Object> params) throws Exception {
 
-    System.out.println(" url "+url+" params "+params);
+    //System.out.println(" url "+url+" params "+params);
     HttpClient client = HttpClientBuilder.create().build();
     HttpPost post = new HttpPost(ZEUS_API + url);
  
@@ -188,8 +188,8 @@ public class ZeusAPIClient {
     post.setEntity(new UrlEncodedFormEntity(urlParameters));
  
     HttpResponse response = client.execute(post);
-    System.out.println("Response Code : " 
-                + response.getStatusLine().getStatusCode());
+    //System.out.println("Response Code : " 
+    //            + response.getStatusLine().getStatusCode());
  
     BufferedReader rd = new BufferedReader(
             new InputStreamReader(response.getEntity().getContent()));
@@ -211,7 +211,7 @@ public class ZeusAPIClient {
 
         URL obj = new URL(url);
 
-        System.out.println(" Url "+url);
+        //System.out.println(" Url "+url);
         HttpClient client = HttpClientBuilder.create().build();
         HttpDelete request = new HttpDelete(url);
 

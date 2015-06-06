@@ -9,6 +9,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import java.util.Iterator;
+import java.util.UUID;
 
 public class ZeusAPILogTest 
 {
@@ -19,7 +20,7 @@ public class ZeusAPILogTest
     //String token = "Your_token_here";
     String token = System.getenv("ZEUS_TOKEN");
  
-    String testLogName = "testing";
+    String testLogName = UUID.randomUUID().toString();
     ZeusAPIClient zeusClient = new ZeusAPIClient(token);
 
     @BeforeClass
