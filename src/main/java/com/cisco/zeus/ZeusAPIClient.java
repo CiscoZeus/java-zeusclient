@@ -95,10 +95,11 @@ public class ZeusAPIClient {
     }
 
     public String retrieveAlerts(){
+        HashMap<String,Object> params = new HashMap<>();
         String ret = "" ;
 
         try {
-            ret = getRequest("/alerts/"+token+"/", null);
+            ret = getRequest("/alerts/"+token+"/", params);
         }
         catch(Exception e) {
             System.out.println(" Exception Raised in Retrieving Alerts"+ e.getMessage());
@@ -107,10 +108,11 @@ public class ZeusAPIClient {
     }
 
     public String retrieveAlert(Integer id){
+        HashMap<String,Object> params = new HashMap<>();
         String ret = "" ;
 
         try {
-            ret = getRequest("/alerts/" + token + "/" + id.toString() + "/", null);
+            ret = getRequest("/alerts/" + token + "/" + id.toString() + "/", params);
         }
         catch(Exception e) {
             System.out.println(" Exception Raised in Retrieving Alerts"+ e.getMessage());
@@ -161,27 +163,29 @@ public class ZeusAPIClient {
     }
 
     public String retrieveTrigalerts(){
+        HashMap<String,Object> params = new HashMap<>();
         String ret = "" ;
 
         try {
-            ret = getRequest("/trigalerts/" + token + "/", null);
+            ret = getRequest("/trigalerts/" + token + "/", params);
         }
         catch(Exception e) {
-            System.out.println(" Exception Raised in Retrieving Trigalerts"+ e.getMessage());
+            System.out.println(" Exception Raised in Retrieving Trigalerts: "+ e.getMessage());
         }
-         return ret;
+        return ret;
     }
 
     public String retrieveTrigalertsLast24(){
+        HashMap<String,Object> params = new HashMap<>();
         String ret = "" ;
 
         try {
-            ret = getRequest("/trigalerts/" + token + "/last24/", null);
+            ret = getRequest("/trigalerts/" + token + "/last24/", params);
         }
         catch(Exception e) {
-            System.out.println(" Exception Raised in Retrieving TrigalertsLast24"+ e.getMessage());
+            System.out.println(" Exception Raised in Retrieving TrigalertsLast24: "+ e.getMessage());
         }
-         return ret;
+        return ret;
     }
 
     public String deleteAlert(Integer id ){
@@ -342,15 +346,20 @@ public class ZeusAPIClient {
         //System.out.println("Response Code : "
         //        + response.getStatusLine().getStatusCode());
 
-         BufferedReader rd = new BufferedReader(
-            new InputStreamReader(response.getEntity().getContent()));
-
-        StringBuffer result = new StringBuffer();
-        String line = "";
-        while ((line = rd.readLine()) != null) {
-            result.append(line);
+        try {
+            StringBuffer result = new StringBuffer();
+            BufferedReader rd = new BufferedReader(
+                    new InputStreamReader(response.getEntity().getContent()));
+            String line = "";
+            while ((line = rd.readLine()) != null) {
+                result.append(line);
+            }
+            //System.out.println(result);
+            return result.toString();
+        } catch(Exception e) {
+            System.out.println("Status Code: "+response.getStatusLine());
+            System.out.println("If code = 204, the alert is deleted.");
+            return response.getStatusLine().toString();
         }
-        //System.out.println(result);
-        return result.toString();
     }
 }
