@@ -38,7 +38,7 @@ public class MetricList {
 
     public MetricList build() throws IOException{
         boolean timePresent = false;
-        double timestamp = 0; 
+        double timestamp = 0;
         for (int valueCount = 0; valueCount < columnValues.size(); valueCount++)
         {
             JSONObject data = new JSONObject();

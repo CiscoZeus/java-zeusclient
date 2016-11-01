@@ -8,8 +8,9 @@ public class Parameters {
 
     public HashMap<String,Object> data = new HashMap<>();
     
-    public void add(String key, Object value) {
+    public Parameters add(String key, Object value) {
         data.put(key,value);
+        return this;
     }
 
     public void clear() {

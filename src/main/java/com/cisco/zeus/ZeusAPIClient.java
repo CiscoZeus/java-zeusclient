@@ -15,8 +15,9 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder; 
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.NameValuePair;
 import org.json.simple.JSONObject;
@@ -28,13 +29,25 @@ import org.apache.http.params.HttpParams;
 
 public class ZeusAPIClient {
 
-    public final static String ZEUS_API = "http://api.ciscozeus.io";
+    public final static String ZEUS_API = "https://api.ciscozeus.io";
     public final static String USER_AGENT = "Mozilla/5.0";
     
     String token = "";
 
     public ZeusAPIClient(String userToken){
         token = userToken;
+    }
+
+    public String sendAlert(Parameters params){
+        String ret = "" ;
+        try {
+            ret = postRequest("/alerts/" + token+ "/", params.data);
+        }
+        catch(Exception e) {
+            System.out.println(" Exception Raised in Sending Alert"+ e.getMessage());
+         }
+        params.clear();
+        return ret;
     }
 
     public String sendMetrics(MetricList list){
@@ -69,6 +82,42 @@ public class ZeusAPIClient {
         return ret;
     }
 
+    public String updateAlert(Integer id, Parameters params){
+        String ret = "" ;
+        try {
+            ret = putRequest("/alerts/" + token + "/" + id.toString() + "/", params.data);
+        }
+        catch(Exception e) {
+            System.out.println(" Exception Raised in Updating Alert"+ e.getMessage());
+         }
+        params.clear();
+        return ret;
+    }
+
+    public String retrieveAlerts(){
+        String ret = "" ;
+
+        try {
+            ret = getRequest("/alerts/"+token+"/", null);
+        }
+        catch(Exception e) {
+            System.out.println(" Exception Raised in Retrieving Alerts"+ e.getMessage());
+         }
+         return ret;
+    }
+
+    public String retrieveAlert(Integer id){
+        String ret = "" ;
+
+        try {
+            ret = getRequest("/alerts/" + token + "/" + id.toString() + "/", null);
+        }
+        catch(Exception e) {
+            System.out.println(" Exception Raised in Retrieving Alerts"+ e.getMessage());
+         }
+         return ret;
+    }
+
     public String retrieveMetricValues(Parameters params){
         String ret = "" ;
         //add data from metrics
@@ -97,16 +146,6 @@ public class ZeusAPIClient {
          return ret;
     }
 
-    public String deleteMetrics(String tag){
-        String ret = "" ;
-        try {
-            ret = deleteRequest("/metrics/" + token + "/"+ tag + "/");
-        }
-        catch(Exception e) {
-            System.out.println(" Exception Raised in deleting Metrics"+ e.getMessage());
-         }
-         return ret;
-    }
     public String retrieveLogs(Parameters params){
         String ret = "" ;
         //add data from logs
@@ -121,6 +160,51 @@ public class ZeusAPIClient {
          return ret;
     }
 
+    public String retrieveTrigalerts(){
+        String ret = "" ;
+
+        try {
+            ret = getRequest("/trigalerts/" + token + "/", null);
+        }
+        catch(Exception e) {
+            System.out.println(" Exception Raised in Retrieving Trigalerts"+ e.getMessage());
+        }
+         return ret;
+    }
+
+    public String retrieveTrigalertsLast24(){
+        String ret = "" ;
+
+        try {
+            ret = getRequest("/trigalerts/" + token + "/last24/", null);
+        }
+        catch(Exception e) {
+            System.out.println(" Exception Raised in Retrieving TrigalertsLast24"+ e.getMessage());
+        }
+         return ret;
+    }
+
+    public String deleteAlert(Integer id ){
+        String ret = "" ;
+        try {
+            ret = deleteRequest("/alerts/" + token + "/"+ id + "/");
+        }
+        catch(Exception e) {
+            System.out.println(" Exception Raised in deleting Alert"+ e.getMessage());
+        }
+        return ret;
+    }
+
+    public String deleteMetrics(String tag){
+        String ret = "" ;
+        try {
+            ret = deleteRequest("/metrics/" + token + "/"+ tag + "/");
+        }
+        catch(Exception e) {
+            System.out.println(" Exception Raised in deleting Metrics"+ e.getMessage());
+         }
+         return ret;
+    }
 
     private String getRequest(String path, HashMap<String,Object> params) throws Exception {
  
@@ -203,6 +287,41 @@ public class ZeusAPIClient {
     return result.toString();
     }
 
+    // HTTP PUT request
+    private String putRequest(String url, HashMap<String,Object> params) throws Exception {
+
+        //System.out.println(" url "+url+" params "+params);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPut put = new HttpPut(ZEUS_API + url);
+
+        // add header
+        put.setHeader("User-Agent", USER_AGENT);
+        //post.setHeader("Authorization", "Bearer " + token);
+
+        Set set = params.entrySet();
+        Iterator i = set.iterator();
+        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+        while(i.hasNext()) {
+            Map.Entry me = (Map.Entry)i.next();
+            urlParameters.add(new BasicNameValuePair(me.getKey().toString(), me.getValue().toString()));
+        }
+        put.setEntity(new UrlEncodedFormEntity(urlParameters));
+
+        HttpResponse response = client.execute(put);
+        //System.out.println("Response Code : "
+        //            + response.getStatusLine().getStatusCode());
+
+        BufferedReader rd = new BufferedReader(
+                new InputStreamReader(response.getEntity().getContent()));
+
+        StringBuffer result = new StringBuffer();
+        String line = "";
+        while ((line = rd.readLine()) != null) {
+            result.append(line);
+        }
+        //System.out.println(result);
+        return result.toString();
+    }
 
     // HTTP Delete request
     private String deleteRequest(String path) throws Exception {

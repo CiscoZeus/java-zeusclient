@@ -17,9 +17,41 @@ public class ZeusSampleClient
         /////////////////////////////////////// 
         //Edit the below line to add your token
         //////////////////////////////////////
-        String token = "Your_token_here";        
+        String token = "Your_token_here";
         System.out.println("******Zeus Access token is "+token+"******");
         ZeusAPIClient zeusClient = new ZeusAPIClient(token);
+
+
+        System.out.println("Sending a alert with log name: zeus-test");
+        Parameters params = new Parameters()
+            .add("alert_name", "value1")
+            .add("username", "value2")
+            .add("alert_expression", "value3");
+
+        String result = zeusClient.sendAlert(params);
+        System.out.println("Alert Post Result "+result);
+
+        sleep(2);
+        System.out.println("Retrieving all alerts");
+        result = zeusClient.retrieveAlerts();
+        System.out.println("Alerts Get Result "+result);
+
+        System.out.println("Retrieving a alert with id: 1");
+        result = zeusClient.retrieveAlert(1);
+        System.out.println("Alert Get Result "+result);
+
+        System.out.println("Updating a alert with id: 1");
+        params = new Parameters()
+            .add("alert_name", "value1")
+            .add("username", "value2")
+            .add("alert_expression", "value3");
+        result = zeusClient.updateAlert(1, params);
+        System.out.println("Alert Put Result "+result);
+        sleep(2);
+        System.out.println("Deleting alert with id: 1");
+        result = zeusClient.deleteAlert(1);
+        System.out.println("Alert Delete Result "+result);
+
 
         System.out.println("Posting Metric with metric name: zeus-test");
         MetricList metric = new MetricList("zeus-test");
@@ -29,7 +61,7 @@ public class ZeusSampleClient
                   .addValues(4, 4, 43.242)  // you can send multiple metrics
                   .build();
 
-        String result = zeusClient.sendMetrics(metric);
+        result = zeusClient.sendMetrics(metric);
         System.out.println("Metrics Post Result "+result);
       
         System.out.println("Posting more metric points to the same metric: zeus-test");
@@ -52,8 +84,7 @@ public class ZeusSampleClient
         System.out.println("Deleting metric with metric name: zeus-test");
         result = zeusClient.deleteMetrics("zeus-test");
         System.out.println("Metrics Delete Result "+result); 
-    
-            
+
 
         System.out.println("Sending a log with log name: zeus-test");
         Log log = new Log()
@@ -97,6 +128,13 @@ public class ZeusSampleClient
         result = zeusClient.retrieveLogs(log_params);
         System.out.println("Logs Get Result "+result);
 
+        System.out.println("Retrieving all trigalerts");
+        result = zeusClient.retrieveTrigalerts();
+        System.out.println("Alerts Get Result "+result);
+
+        System.out.println("Retrieving all trigalertLast24s");
+        result = zeusClient.retrieveTrigalertsLast24();
+        System.out.println("Alert Get Result "+result);
     }
 
     public static void sleep(int sec) {
