@@ -29,12 +29,13 @@ import org.apache.http.params.HttpParams;
 
 public class ZeusAPIClient {
 
-    public final static String ZEUS_API = "https://api.ciscozeus.io";
     public final static String USER_AGENT = "Mozilla/5.0";
-    
+
+    String ZEUS_API = "";
     String token = "";
 
-    public ZeusAPIClient(String userToken){
+    public ZeusAPIClient(String zeusapi, String userToken){
+        ZEUS_API = zeusapi;
         token = userToken;
     }
 
@@ -357,8 +358,8 @@ public class ZeusAPIClient {
             //System.out.println(result);
             return result.toString();
         } catch(Exception e) {
-            System.out.println("Status Code: "+response.getStatusLine());
-            System.out.println("If code = 204, the alert is deleted.");
+            // System.out.println("Status Code: "+response.getStatusLine());
+            // System.out.println("If code = 204, the alert is deleted.");
             return response.getStatusLine().toString();
         }
     }

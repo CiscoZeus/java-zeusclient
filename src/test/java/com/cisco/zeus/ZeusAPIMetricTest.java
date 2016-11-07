@@ -17,11 +17,12 @@ public class ZeusAPIMetricTest
     /////////////////////////////////////// 
     //Edit the below line to add your token
     //////////////////////////////////////
-    //String token = "Your_token_here";
+    //String token = "Your_token_here";;
+    String zeusapi = System.getenv("ZEUS_API");
     String token = System.getenv("ZEUS_TOKEN");
- 
+
     String testSeriesName = UUID.randomUUID().toString();
-    ZeusAPIClient zeusClient = new ZeusAPIClient(token);
+    ZeusAPIClient zeusClient = new ZeusAPIClient(zeusapi, token);
 
     @BeforeClass
     public static void oneTimeSetUp() {

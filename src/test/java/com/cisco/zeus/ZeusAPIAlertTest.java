@@ -15,10 +15,11 @@ public class ZeusAPIAlertTest
     //Edit the below line to add your token
     //////////////////////////////////////
     //String token = "Your_token_here";
+    String zeusapi = System.getenv("ZEUS_API");
     String token = System.getenv("ZEUS_TOKEN");
  
     String testLogName = UUID.randomUUID().toString();
-    ZeusAPIClient zeusClient = new ZeusAPIClient(token);
+    ZeusAPIClient zeusClient = new ZeusAPIClient(zeusapi, token);
 
     @BeforeClass
     public static void oneTimeSetUp() {
@@ -49,7 +50,7 @@ public class ZeusAPIAlertTest
     @Test
     public void testAlert() throws IOException
     {
-        System.out.println("Sending a alert with log name: zeus-test");
+        System.out.println("Sending a alert");
         Parameters params = new Parameters()
                 .add("alert_name", "value1")
                 .add("username", "value2")

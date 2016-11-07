@@ -18,13 +18,14 @@ public class ZeusSampleClient
         /////////////////////////////////////// 
         //Edit the below line to add your token
         //////////////////////////////////////
+        String zeusapi = "Zeus_API_URL";
         String token = "Your_token_here";
         System.out.println("******Zeus Access token is "+token+"******");
-        ZeusAPIClient zeusClient = new ZeusAPIClient(token);
+        ZeusAPIClient zeusClient = new ZeusAPIClient(zeusapi, token);
 
 
         Integer val = 100;
-        System.out.println("Sending a alert with log name: zeus-test");
+        System.out.println("Sending a alert");
         Parameters params = new Parameters()
             .add("alert_name", "value"+(val+1))
             .add("username", "value"+(val+2))
@@ -47,10 +48,6 @@ public class ZeusSampleClient
         result = zeusClient.retrieveAlerts();
         System.out.println("Alerts Get Result "+result);
 
-        System.out.println("Retrieving a alert with id: "+alertID);
-        result = zeusClient.retrieveAlert(alertID);
-        System.out.println("Alert Get Result "+result);
-
         System.out.println("Updating a alert with id: "+alertID);
         params = new Parameters()
             .add("alert_name", "value"+(val+4))
@@ -59,9 +56,14 @@ public class ZeusSampleClient
         result = zeusClient.updateAlert(alertID, params);
         System.out.println("Alert Put Result "+result);
         sleep(2);
+        System.out.println("Retrieving a alert with id: "+alertID);
+        result = zeusClient.retrieveAlert(alertID);
+        System.out.println("Alert Get Result "+result);
+
         System.out.println("Deleting alert with id: "+alertID);
         result = zeusClient.deleteAlert(alertID);
         System.out.println("Alert Delete Result "+result);
+        System.out.println("If status code == 204, then delete is succeeded");
 
 
         System.out.println("Posting Metric with metric name: zeus-test");
