@@ -1,9 +1,10 @@
 package com.cisco.zeus;
 
 import java.io.IOException;
+import java.util.Map;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -17,9 +18,53 @@ public class ZeusSampleClient
         /////////////////////////////////////// 
         //Edit the below line to add your token
         //////////////////////////////////////
-        String token = "Your_token_here";        
+        String zeusapi = "Zeus_API_URL";
+        String token = "Your_token_here";
         System.out.println("******Zeus Access token is "+token+"******");
-        ZeusAPIClient zeusClient = new ZeusAPIClient(token);
+        ZeusAPIClient zeusClient = new ZeusAPIClient(zeusapi, token);
+
+
+        Integer val = 100;
+        System.out.println("Sending a alert");
+        Parameters params = new Parameters()
+            .add("alert_name", "value"+(val+1))
+            .add("username", "value"+(val+2))
+            .add("alert_expression", "value"+(val+3));
+
+        String result = zeusClient.sendAlert(params);
+        System.out.println("Alert Post Result "+result);
+        Integer alertID = null;
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject obj = (JSONObject)parser.parse(result);
+            Long lng = (Long)obj.get("id");
+            alertID = lng != null ? lng.intValue() : null;
+        } catch(ParseException e) {
+            System.out.println("ParseERROR: "+e);
+        }
+
+        sleep(2);
+        System.out.println("Retrieving all alerts");
+        result = zeusClient.retrieveAlerts();
+        System.out.println("Alerts Get Result "+result);
+
+        System.out.println("Updating a alert with id: "+alertID);
+        params = new Parameters()
+            .add("alert_name", "value"+(val+4))
+            .add("username", "value"+(val+5))
+            .add("alert_expression", "value"+(val+6));
+        result = zeusClient.updateAlert(alertID, params);
+        System.out.println("Alert Put Result "+result);
+        sleep(2);
+        System.out.println("Retrieving a alert with id: "+alertID);
+        result = zeusClient.retrieveAlert(alertID);
+        System.out.println("Alert Get Result "+result);
+
+        System.out.println("Deleting alert with id: "+alertID);
+        result = zeusClient.deleteAlert(alertID);
+        System.out.println("Alert Delete Result "+result);
+        System.out.println("If status code == 204, then delete is succeeded");
+
 
         System.out.println("Posting Metric with metric name: zeus-test");
         MetricList metric = new MetricList("zeus-test");
@@ -29,7 +74,7 @@ public class ZeusSampleClient
                   .addValues(4, 4, 43.242)  // you can send multiple metrics
                   .build();
 
-        String result = zeusClient.sendMetrics(metric);
+        result = zeusClient.sendMetrics(metric);
         System.out.println("Metrics Post Result "+result);
       
         System.out.println("Posting more metric points to the same metric: zeus-test");
@@ -52,8 +97,7 @@ public class ZeusSampleClient
         System.out.println("Deleting metric with metric name: zeus-test");
         result = zeusClient.deleteMetrics("zeus-test");
         System.out.println("Metrics Delete Result "+result); 
-    
-            
+
 
         System.out.println("Sending a log with log name: zeus-test");
         Log log = new Log()
@@ -97,6 +141,14 @@ public class ZeusSampleClient
         result = zeusClient.retrieveLogs(log_params);
         System.out.println("Logs Get Result "+result);
 
+
+        System.out.println("Retrieving all trigalerts");
+        result = zeusClient.retrieveTrigalerts();
+        System.out.println("Alerts Get Result "+result);
+
+        System.out.println("Retrieving all trigalertLast24s");
+        result = zeusClient.retrieveTrigalertsLast24();
+        System.out.println("Alert Get Result "+result);
     }
 
     public static void sleep(int sec) {
@@ -107,6 +159,5 @@ public class ZeusSampleClient
             Thread.currentThread().interrupt();
         }
     }
-
 
 }
