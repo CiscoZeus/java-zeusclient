@@ -1,40 +1,41 @@
 package com.cisco.zeus;
 
-import java.util.*;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
+import org.json.JSONObject;
+
 import java.io.IOException;
 
 
+/**
+ * Log Object
+ * <p>
+ * A pair of (string, Object)
+ */
 public class Log {
-    JSONObject data = new JSONObject();
-    boolean mutable = true;
+    private boolean mutable;
+    public JSONObject data;
 
-    public Log setKeyValues(String key, Object value) throws IOException{
-        if(!mutable) {
-            throw new IOException("Log object is immutable");
-        }
-        data.put(key,value);
-        return this;
+    public Log() {
+        mutable = true;
+        data = new JSONObject();
     }
 
-    /*
-    public Log setKeyValues(String key, double value){
-        data.put(key,value);
+    public Log setKeyValues(String key, Object value) throws IOException {
+        if (!mutable) {
+            throw new IOException("Log object is immutable");
+        }
+
+        data.put(key, value);
         return this;
-    }*/
+    }
 
     public Log build() {
         mutable = false;
+
         return this;
     }
 
-     @Override
-     public String toString() {
-        return "["+data.toString()+"]";
+    @Override
+    public String toString() {
+        return data.toString();
     }
-
 }
-
-
-

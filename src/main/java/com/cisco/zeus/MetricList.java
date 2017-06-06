@@ -1,10 +1,11 @@
 package com.cisco.zeus;
 
-import java.util.*;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
+
+import java.util.*;
 import java.util.ArrayList;
-import java.io.IOException; 
+import java.io.IOException;
 
 
 public class MetricList {
@@ -17,18 +18,18 @@ public class MetricList {
         metricName = name;
     }
 
-    public MetricList addColumns(String... cols){
+    public MetricList addColumns(String... cols) {
         columnNames = new ArrayList<String>();
-        for(String col : cols) {
+        for (String col : cols) {
             columnNames.add(col);
         }
         return this;
     }
 
-    public MetricList addValues(double... values){
+    public MetricList addValues(double... values) {
         List<Double> entry = new ArrayList<Double>();
- 
-        for(double value : values) {
+
+        for (double value : values) {
             entry.add(value);
         }
 
@@ -36,35 +37,41 @@ public class MetricList {
         return this;
     }
 
-    public MetricList build() throws IOException{
+    public MetricList build() throws IOException {
         boolean timePresent = false;
-        double timestamp = 0; 
-        for (int valueCount = 0; valueCount < columnValues.size(); valueCount++)
-        {
+        double timestamp = 0;
+
+        for (int valueCount = 0; valueCount < columnValues.size(); valueCount++) {
             JSONObject data = new JSONObject();
-            if(columnNames.size() !=  columnValues.get(valueCount).size())
+
+            if (columnNames.size() != columnValues.get(valueCount).size()) {
                 throw new IOException("Column name size and column value size do not match");
+            }
+
             for (int i = 0; i < columnNames.size(); i++) {
-                if(columnNames.get(i).equals("timestamp")) {
+                if (columnNames.get(i).equals("timestamp")) {
                     timePresent = true;
                     timestamp = columnValues.get(valueCount).get(i);
-                }
-                else {
-                data.put(columnNames.get(i),columnValues.get(valueCount).get(i));
+                } else {
+                    data.put(columnNames.get(i), columnValues.get(valueCount).get(i));
                 }
             }
+
             JSONObject datapoint = new JSONObject();
-            datapoint.put("point",data);
-            if(timePresent) {
-                datapoint.put("timestamp",timestamp);
+            datapoint.put("point", data);
+
+            if (timePresent) {
+                datapoint.put("timestamp", timestamp);
             }
+
             data = datapoint;
             list.add(data.clone());
         }
+
         return this;
     }
 
-    public void clear(){
+    public void clear() {
         list = new JSONArray();
         columnValues = new ArrayList<List<Double>>();
     }
@@ -74,6 +81,3 @@ public class MetricList {
         return list.toString();
     }
 }
-
-
-
