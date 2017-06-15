@@ -1,20 +1,18 @@
 package com.cisco.zeus;
 
-import org.apache.http.client.methods.*;
-import org.json.JSONObject;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
-
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.*;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 
-
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
 
 
@@ -22,8 +20,9 @@ import java.util.*;
  * ZeusAPIClient
  */
 public class ZeusAPIClient {
-
+    private HttpClient client;
     private String accessToken;
+
     // TODO Configurable Endpoint
     private final static String ZEUS_API = "http://api.ciscozeus.io";
 
@@ -32,6 +31,7 @@ public class ZeusAPIClient {
      */
     public ZeusAPIClient(String token) {
         accessToken = token;
+        client = HttpClientBuilder.create().build();
     }
 
     /**
@@ -66,11 +66,12 @@ public class ZeusAPIClient {
         body.add(new BasicNameValuePair("logs", logList.toString()));
 
         HttpResponse response = request("POST", path, body);
+
         return deserialize(response);
     }
 
     /**
-     * @param params
+     * @param params is Parameter object for building request message
      * @return JSON Response object
      * @throws IOException is risen when the server is not available or the response could not be parsed
      */
@@ -83,7 +84,7 @@ public class ZeusAPIClient {
     }
 
     /**
-     * @param params
+     * @param params is Parameter object for building request message
      * @return JSON Response object
      * @throws IOException is risen when the server is not available or the response could not be parsed
      */
@@ -119,34 +120,32 @@ public class ZeusAPIClient {
 
     private HttpResponse request(
             String method, String path) throws IOException {
-        return request(method, path, Collections.<String, String>emptyMap(), new ArrayList<NameValuePair>());
+        return request(method, path, Collections.<String, String>emptyMap(), new LinkedList<NameValuePair>());
     }
 
     private HttpResponse request(
-            String method, String path, ArrayList<NameValuePair> body) throws IOException {
+            String method, String path, List<NameValuePair> body) throws IOException {
         return request(method, path, Collections.<String, String>emptyMap(), body);
     }
 
     /**
      * request do HTTP Call against the endpoint.
-     *
-     * TODO body should be JSON instead of ArrayList.
+     * <p>
+     * TODO body should be JSON instead of List (Form Data).
+     * This requires API endpoints to support for JSON message.
      *
      * @param method HTTP Method such as GET, POST, PUT or DELETE.
-     * @param path URL Path starting with '/'
+     * @param path   URL Path starting with '/'
      * @param header HTTP Header
-     * @param body HTTP Form data
+     * @param body   HTTP Form data
      * @return HTTP Response
      * @throws IOException
      */
     private HttpResponse request(
             String method, String path,
-            Map<String, String> header, ArrayList<NameValuePair> body) throws IOException {
+            Map<String, String> header, List<NameValuePair> body) throws IOException {
 
         String url = ZEUS_API.concat(path);
-
-        HttpClient client = HttpClientBuilder.create().build();
-
         HttpRequestBase request;
         UrlEncodedFormEntity entity = new UrlEncodedFormEntity(body);
 
@@ -177,7 +176,7 @@ public class ZeusAPIClient {
             request.setHeader(entry.getKey(), entry.getValue());
         }
 
-        return client.execute(request);
+        return execute(request);
     }
 
     /**
@@ -192,18 +191,26 @@ public class ZeusAPIClient {
      * @throws IOException is risen when could not parse the response body
      */
     private JSONObject deserialize(HttpResponse response) throws IOException {
-        InputStreamReader stream = new InputStreamReader(response.getEntity().getContent());
-        BufferedReader rd = new BufferedReader(stream);
-
-        StringBuilder result = new StringBuilder();
-
-        String line;
-        while ((line = rd.readLine()) != null) {
-            result.append(line);
+        HttpEntity entity = response.getEntity();
+        if (entity == null) {
+            // Empty response body
+            return new JSONObject();
         }
-        stream.close();
 
-        String body = result.toString();
+        String body = EntityUtils.toString(entity);
         return new JSONObject(body);
+    }
+
+    /**
+     * This method is for mocking the request/response of API call.
+     *
+     * TODO Mock HttpClient.execute(HttpRequestBase) instead, and remove this function.
+     *
+     * @param request to be used by HttpClient
+     * @return HttpResponse object
+     * @throws IOException is risen when API server is not available
+     */
+    protected HttpResponse execute(HttpRequestBase request) throws IOException {
+        return client.execute(request);
     }
 }
