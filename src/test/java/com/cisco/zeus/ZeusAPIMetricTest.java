@@ -1,491 +1,150 @@
 package com.cisco.zeus;
 
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseFactory;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.DefaultHttpResponseFactory;
+import org.apache.http.message.BasicStatusLine;
 import org.junit.*;
-
-import static org.junit.Assert.*;
+import org.json.JSONObject;
+import org.json.simple.parser.ParseException;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.UUID;
+
+import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.HttpVersion.HTTP_1_1;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
 
 
-import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-
+/**
+ * ZeusAPIMetricTest
+ * <p>
+ * Test For the methods related to the Metrics service.
+ */
 public class ZeusAPIMetricTest {
-
-    /////////////////////////////////////// 
-    //Edit the below line to add your token
-    //////////////////////////////////////
-    //String token = "Your_token_here";
-    String token = System.getenv("ZEUS_TOKEN");
-
-    String testSeriesName = UUID.randomUUID().toString();
-    ZeusAPIClient zeusClient = new ZeusAPIClient(token);
+    private ZeusAPIClient client;
+    private static String fakeToken;
+    private static String fakeAuthHeader;
+    private static HttpResponseFactory responseFactory;
+    private ArgumentCaptor<HttpRequestBase> requestArguments;
 
     @BeforeClass
-    public static void oneTimeSetUp() {
-        // one-time initialization code   
-        System.out.println("OnetimeSetup: Setting up ZeusAPI Client for testing metrics");
+    public static void beforeAll() {
+        fakeToken = "fake-token";
+        fakeAuthHeader = String.format("Bearer %s", fakeToken);
+        responseFactory = new DefaultHttpResponseFactory();
     }
 
-    @AfterClass
-    public static void oneTimeTearDown() {
-        // one-time cleanup code
-        System.out.println("oneTimeTearDown: Zeus API Client metrics testing completed");
-    }
-
-    @After
-    public void tearDown() {
-        System.out.println("Deleting Metric");
-        String result = zeusClient.deleteMetrics(testSeriesName);
-    }
-
-    public void sleep(int sec) {
-        System.out.println("Sleeping for " + sec + " seconds");
-        try {
-            Thread.sleep(sec * 1000);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public long countDataPointsInMetric(String metricName, String result) throws ParseException {
-        long length = -1;
-        JSONParser parser = new JSONParser();
-        Object obj = parser.parse(result);
-        JSONArray array = (JSONArray) obj;
-        Iterator<JSONObject> iterator = array.iterator();
-        while (iterator.hasNext()) {
-            JSONObject json = (JSONObject) (iterator.next());
-            if ((json.get("name")).equals(metricName)) {
-                length = ((JSONArray) json.get("points")).size();
-                break;
-            }
-        }
-        return length;
-    }
-
-    public long countAggregateDataPointsInMetric(String metricName, String aggregateFn, String result) throws ParseException {
-        long length = -1;
-        JSONParser parser = new JSONParser();
-        Object obj = parser.parse(result);
-        JSONArray array = (JSONArray) obj;
-        Iterator<JSONObject> iterator = array.iterator();
-        while (iterator.hasNext()) {
-            JSONObject json = (JSONObject) (iterator.next());
-            if ((json.get("name")).equals(metricName)) {
-                int aggregateIndex = ((JSONArray) json.get("columns")).indexOf(aggregateFn);
-                JSONArray arr = (JSONArray) json.get("points");
-                Iterator<JSONArray> itr = arr.iterator();
-                length = 0;
-                while (itr.hasNext()) {
-                    length += (long) ((JSONArray) (itr.next())).get(aggregateIndex);
-                }
-                break;
-            }
-        }
-        return length;
-    }
-
-    public int countTotalMetricNames(String result) throws ParseException {
-        JSONParser parser = new JSONParser();
-        Object obj = parser.parse(result);
-        JSONArray array = (JSONArray) obj;
-        return array.size();
-    }
-
-    public boolean isMetricNamePresent(String metricName, String result) throws ParseException {
-        JSONParser parser = new JSONParser();
-        boolean isPresent = false;
-        Object obj = parser.parse(result);
-        JSONArray array = (JSONArray) obj;
-        Iterator<JSONObject> iterator = array.iterator();
-        while (iterator.hasNext()) {
-            JSONObject json = (JSONObject) (iterator.next());
-            if ((json.get("name")).equals(metricName)) {
-                isPresent = true;
-                break;
-            }
-        }
-        return isPresent;
+    @Before
+    public void beforeEach() {
+        client = spy(new ZeusAPIClient(fakeToken));
+        requestArguments = ArgumentCaptor.forClass(HttpRequestBase.class);
     }
 
     @Test
-    public void testSingleMetric() throws IOException, ParseException {
-        //send a single Metric to Zeus with only value field 
+    public void testSendMetrics() throws IOException, ParseException {
+        String metricsName = "fake-metrics";
+        String expectedURI = String.format(
+                "http://api.ciscozeus.io/metrics/%s/%s/",
+                fakeToken, metricsName
+        );
 
-        //Each Metric is (timestamp, <list of columns>) pair in the system
-        //If timestamp is omitted, system generated timestamp will be used
-        System.out.println("Sending Metric");
-        MetricList metric = new MetricList(testSeriesName)
+        Parameters params = new Parameters();
+        params.add("metric_name", metricsName);
+
+
+        MetricList metric = new MetricList(metricsName)
                 .addColumns("col1", "col2")
                 .addValues(3, 3)
                 .build();
 
-        String result = zeusClient.sendMetrics(metric);
-        System.out.println("Metric Sent: " + result);
+        mockResponse(SC_OK);
+        client.sendMetrics(metric);
+        verify(client, times(1)).execute(requestArguments.capture());
 
-        sleep(2);
+        HttpRequestBase fakeRequest = requestArguments.getValue();
+        assertEquals(HttpPost.METHOD_NAME, fakeRequest.getMethod());
+        assertEquals(expectedURI, fakeRequest.getURI().toString());
+        checkAuthorizationHeader(fakeRequest);
 
-        System.out.println("Retrieving Metric");
-        Parameters params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 1);
-        assertTrue(countTotalMetricNames(result) == 1);
-
+        // TODO Check the request body.
     }
 
     @Test
-    public void testGetMetricNames() throws IOException, ParseException {
-        //send a single Metric to Zeus with only value field 
+    public void testRetrieveMetricNames() throws IOException {
+        String expectedURI = String.format(
+                "http://api.ciscozeus.io/metrics/%s/_names", fakeToken
+        );
 
-        //Each Metric is (timestamp, <list of columns>) pair in the system
-        //If timestamp is omitted, system generated timestamp will be used
-        System.out.println("Sending Metric");
-        MetricList metric = new MetricList(testSeriesName)
-                .addColumns("col1", "col2")
-                .addValues(3, 3)
-                .build();
-
-        String result = zeusClient.sendMetrics(metric);
-        System.out.println("Metric Sent: " + result);
-
-        MetricList metric1 = new MetricList(testSeriesName + "1")
-                .addColumns("col3", "col4")
-                .addValues(4, 4)
-                .build();
-
-        result = zeusClient.sendMetrics(metric1);
-        System.out.println("Metric Sent: " + result);
-
-
-        sleep(2);
-
-        System.out.println("Retrieving Metric");
         Parameters params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        result = zeusClient.retrieveMetricNames(params);
+        params.add("metric_name", "fake-metrics");
 
-        System.out.println("Metric Got: " + result);
-        assertTrue(countTotalMetricNames(result) == 2);
+        mockResponse(SC_OK);
+        client.retrieveMetricNames(params);
+        verify(client, times(1)).execute(requestArguments.capture());
 
-        System.out.println("Delete Metric");
-        result = zeusClient.deleteMetrics(testSeriesName + "1");
-        System.out.println("Metric Delete: " + result);
-
-    }
-
-
-    @Test
-    public void testMultipleMetrics() throws IOException, ParseException {
-        //send a single Metric to Zeus with only value field 
-
-        //Each Metric is (timestamp, <list of columns>) pair in the system
-        //If timestamp is omitted, system generated timestamp will be used
-        System.out.println("Sending Metric");
-        MetricList metric = new MetricList(testSeriesName)
-                .addColumns("col1", "col2")
-                .addValues(3, 3)
-                .build();
-
-        String result = zeusClient.sendMetrics(metric);
-        System.out.println("Metric Sent: " + result);
-
-        MetricList metric1 = new MetricList(testSeriesName + "1")
-                .addColumns("col3", "col4")
-                .addValues(4, 4)
-                .build();
-
-        result = zeusClient.sendMetrics(metric1);
-        System.out.println("Metric Sent: " + result);
-
-
-        sleep(2);
-
-        System.out.println("Retrieving Metric");
-        Parameters params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(isMetricNamePresent(testSeriesName + "1", result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 1);
-        assertTrue(countDataPointsInMetric(testSeriesName + "1", result) == 1);
-        assertTrue(countTotalMetricNames(result) == 2);
-
-        System.out.println("Delete Metric");
-        result = zeusClient.deleteMetrics(testSeriesName + "1");
-        System.out.println("Metric Delete: " + result);
-
-    }
-
-
-    @Test
-    public void testMultipleDataPointsWithoutTimestamps() throws IOException, ParseException {
-        //send mulitple Metrics to Zeus
-
-        //Each Metric is (timestamp, <list of columns>) pair in the system
-        //If timestamp is omitted, system generated timestamp will be used
-        System.out.println("Sending Metrics");
-        MetricList metric = new MetricList(testSeriesName)
-                .addColumns("col1", "col2")
-                .addValues(3, 3)
-                .addValues(4, 4)
-                .build();
-
-        String result = zeusClient.sendMetrics(metric);
-        System.out.println("Metric Sent: " + result);
-
-        sleep(2);
-
-        System.out.println("Retrieving Metrics");
-        Parameters params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("limit", 10);
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 2);
-        assertTrue(countTotalMetricNames(result) == 1);
-
+        HttpRequestBase fakeRequest = requestArguments.getValue();
+        assertEquals(HttpGet.METHOD_NAME, fakeRequest.getMethod());
+        // TODO  Check the request message reflects Parameter object correctly to URL
+        assertTrue(fakeRequest.getURI().toString().contains(expectedURI));
+        checkAuthorizationHeader(fakeRequest);
     }
 
     @Test
-    public void testMultipleDataPointsWithTimestamps() throws IOException, ParseException {
-        //send mulitple Metrics to Zeus
+    public void testRetrieveMetricValues() throws IOException {
+        String expectedURI = String.format("http://api.ciscozeus.io/metrics/%s/_values", fakeToken);
 
-        //Each Metric is (timestamp, <list of columns>) pair in the system
-        //Timestamp can be supplied with "timestamp" column
-        System.out.println("Sending Metrics");
-        MetricList metric = new MetricList(testSeriesName)
-                .addColumns("timestamp", "col1", "col2")
-                .addValues(1423034086.343, 3, 3)
-                .addValues(1423034089, 4, 4)
-                .build();
-
-        String result = zeusClient.sendMetrics(metric);
-        System.out.println("Metric Sent: " + result);
-
-        sleep(2);
-
-        System.out.println("Retrieving Metrics");
         Parameters params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("limit", 10);
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 2);
-        assertTrue(countTotalMetricNames(result) == 1);
-
-    }
-
-
-    @Test
-    public void testMetricAggregation() throws IOException, ParseException {
-        //send mulitple Metrics to Zeus
-
-        //Each Metric is (timestamp, <list of columns>) pair in the system
-        //Timestamp can be supplied with "timestamp" column
-        System.out.println("Sending Metrics");
-        MetricList metric = new MetricList(testSeriesName)
-                .addColumns("timestamp", "col1", "col2")
-                .addValues(1433198001, 3, 3)
-                .addValues(1433198121, 4, 4)
-                .addValues(1433198241, 5, 5)
-                .addValues(1433198361, 6, 6)
-                .addValues(1433198481, 7, 7)
-                .build();
-
-        String result = zeusClient.sendMetrics(metric);
-        System.out.println("Metric Sent: " + result);
-
-        sleep(2);
-
-        System.out.println("Retrieving Metrics");
-        Parameters params = new Parameters();
-        params.add("metric_name", testSeriesName);
+        params.add("metric_name", "fake-metrics");
+        params.add("offset", 1);
+        params.add("limit", 3);
+        params.add("from", 1433198121);
+        params.add("to", 1433198361);
         params.add("aggregator_function", "count");
         params.add("aggregator_column", "col1");
         params.add("group_interval", "5m");
-        result = zeusClient.retrieveMetricValues(params);
 
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countAggregateDataPointsInMetric(testSeriesName, "count", result) == 5);
-        assertTrue(countTotalMetricNames(result) == 1);
+        mockResponse(SC_OK);
+        client.retrieveMetricValues(params);
+        verify(client, times(1)).execute(requestArguments.capture());
 
+        HttpRequestBase fakeRequest = requestArguments.getValue();
+        assertEquals(HttpGet.METHOD_NAME, fakeRequest.getMethod());
+        // TODO  Check the request message reflects Parameter object correctly to URL
+        assertTrue(fakeRequest.getURI().toString().contains(expectedURI));
+        checkAuthorizationHeader(fakeRequest);
+
+        // TODO Check the request message reflects Parameter object correctly.
     }
 
-    @Test
-    public void testMetricOffsetAndLimit() throws IOException, ParseException {
-        //send multiple Metrics to Zeus
-
-        //Each Metric is (timestamp, <list of columns>) pair in the system
-        //Timestamp can be supplied with "timestamp" column
-        System.out.println("Sending Metrics");
-        MetricList metric = new MetricList(testSeriesName)
-                .addColumns("timestamp", "col1", "col2")
-                .addValues(1433198001, 3, 3)
-                .addValues(1433198121, 4, 4)
-                .addValues(1433198241, 5, 5)
-                .addValues(1433198361, 6, 6)
-                .addValues(1433198481, 7, 7)
-                .build();
-
-        String result = zeusClient.sendMetrics(metric);
-        System.out.println("Metric Sent: " + result);
-
-        sleep(2);
-
-        System.out.println("Retrieving Metrics");
-        Parameters params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("limit", 3);
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 3);
-        assertTrue(countTotalMetricNames(result) == 1);
-
-
-        System.out.println("Retrieving Metrics");
-        params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("offset", 1);
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 4);
-        assertTrue(countTotalMetricNames(result) == 1);
-
-
-        System.out.println("Retrieving Metrics");
-        params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("offset", 1);
-        params.add("limit", 3);
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 3);
-        assertTrue(countTotalMetricNames(result) == 1);
-
-
+    private void checkAuthorizationHeader(HttpRequestBase request) {
+        Header[] fakeHeader = request.getHeaders("Authorization");
+        assertEquals(1, fakeHeader.length);
+        assertEquals(fakeAuthHeader, fakeHeader[0].getValue());
     }
 
-    @Test
-    public void testMetricFilterTimestamp() throws IOException, ParseException {
-        //send mulitple Metrics to Zeus
 
-        //Each Metric is (timestamp, <list of columns>) pair in the system
-        //Timestamp can be supplied with "timestamp" column
-        System.out.println("Sending Metrics");
-        MetricList metric = new MetricList(testSeriesName)
-                .addColumns("timestamp", "col1", "col2")
-                .addValues(1433198001, 3, 3)
-                .addValues(1433198121.123, 4, 4)
-                .addValues(1433198241, 5, 5)
-                .addValues(1433198361.5678909, 6, 6)
-                .addValues(1433198481, 7, 7)
-                .build();
+    private void mockResponse(int statusCode) throws IOException {
+        BasicStatusLine statusLine = new BasicStatusLine(HTTP_1_1, statusCode, null);
+        HttpResponse fakeResponse = responseFactory.newHttpResponse(statusLine, null);
 
-        String result = zeusClient.sendMetrics(metric);
-        System.out.println("Metric Sent: " + result);
-
-        sleep(2);
-
-        System.out.println("Retrieving Metrics");
-        Parameters params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("from", 1433198121);
-        params.add("to", 1433198361);
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 2);
-        assertTrue(countTotalMetricNames(result) == 1);
-
-        params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("from", 1433198121);
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 4);
-        assertTrue(countTotalMetricNames(result) == 1);
-
-        params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("from", 1433198121.130);
-        result = zeusClient.retrieveMetricValues(params);
-
-        sleep(2);
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 3);
-        assertTrue(countTotalMetricNames(result) == 1);
-
-        params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("from", 1433198121.2090);
-        params.add("to", 1433198360.989);
-        result = zeusClient.retrieveMetricValues(params);
-
-        sleep(2);
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 1);
-        assertTrue(countTotalMetricNames(result) == 1);
-
+        doReturn(fakeResponse).when(client).execute((HttpRequestBase) any());
     }
 
-    @Test
-    public void testMetricFilterCondition() throws IOException, ParseException {
-        //send mulitple Metrics to Zeus
+    private void mockResponse(int statusCode, JSONObject body) throws IOException {
+        BasicStatusLine statusLine = new BasicStatusLine(HTTP_1_1, statusCode, null);
+        HttpResponse fakeResponse = responseFactory.newHttpResponse(statusLine, null);
+        StringEntity jsonBody = new StringEntity(body.toString(), ContentType.APPLICATION_JSON);
+        fakeResponse.setEntity(jsonBody);
 
-        //Each Metric is (timestamp, <list of columns>) pair in the system
-        //Timestamp can be supplied with "timestamp" column
-        System.out.println("Sending Metrics");
-        MetricList metric = new MetricList(testSeriesName)
-                .addColumns("timestamp", "col1", "col2")
-                .addValues(1433198001, 3, 3)
-                .addValues(1433198121, 4, 4)
-                .addValues(1433198241, 5, 5)
-                .addValues(1433198361, 6, 6)
-                .addValues(1433198481, 7, 7)
-                .build();
-
-        String result = zeusClient.sendMetrics(metric);
-        System.out.println("Metric Sent: " + result);
-
-        sleep(2);
-
-        System.out.println("Retrieving Metrics");
-        Parameters params = new Parameters();
-        params.add("metric_name", testSeriesName);
-        params.add("filter_condition", "col1 > 4 and col2 < 7");
-        result = zeusClient.retrieveMetricValues(params);
-
-        System.out.println("Metric Got: " + result);
-        assertTrue(isMetricNamePresent(testSeriesName, result));
-        assertTrue(countDataPointsInMetric(testSeriesName, result) == 2);
-        assertTrue(countTotalMetricNames(result) == 1);
+        doReturn(fakeResponse).when(client).execute((HttpRequestBase) any());
     }
 }

@@ -77,7 +77,7 @@ public class ZeusAPIClient {
      */
     public JSONObject retrieveMetricValues(Parameters params) throws IOException {
         String queryString = URLEncodedUtils.format(params.toNameValuePairList(), "utf-8");
-        String path = String.format("/logs/%s/_values?%s", accessToken, queryString);
+        String path = String.format("/metrics/%s/_values?%s", accessToken, queryString);
 
         HttpResponse response = request("GET", path);
         return deserialize(response);
