@@ -159,6 +159,31 @@ public class ZeusAPILogTest {
         HttpRequestBase fakeRequest = requestArguments.getValue();
         assertEquals(HttpGet.METHOD_NAME, fakeRequest.getMethod());
         assertEquals(expectedURI, fakeRequest.getURI().toString());
+        checkAuthorizationHeader(fakeRequest);
+
+    }
+
+    @Test
+    public void testRetrieveLogsWithBucketName() throws IOException {
+        String fakeLogName = "fake-logs";
+        String fakeBucketName = "fake-org/fake-bucket";
+        String expectedURI = String.format(
+                "http://api.ciscozeus.io/logs/%s?log_name=%s",
+                fakeToken, fakeLogName
+        );
+
+        Parameters params = new Parameters();
+        params.add("log_name", fakeLogName);
+
+        mockResponse(SC_OK);
+        client.bucket(fakeBucketName).retrieveLogs(params);
+        verify(client, times(1)).execute(requestArguments.capture());
+
+        HttpRequestBase fakeRequest = requestArguments.getValue();
+        assertEquals(HttpGet.METHOD_NAME, fakeRequest.getMethod());
+        assertEquals(expectedURI, fakeRequest.getURI().toString());
+        checkAuthorizationHeader(fakeRequest);
+        checkBucketNameHeader(fakeRequest, fakeBucketName);
     }
 
     private void checkAuthorizationHeader(HttpRequestBase request) {
@@ -167,6 +192,11 @@ public class ZeusAPILogTest {
         assertEquals(fakeAuthHeader, fakeHeader[0].getValue());
     }
 
+    private void checkBucketNameHeader(HttpRequestBase request, String bucketName) {
+        Header[] fakeHeader = request.getHeaders("Bucket-Name");
+        assertEquals(1, fakeHeader.length);
+        assertEquals(bucketName, fakeHeader[0].getValue());
+    }
 
     private void mockResponse(int statusCode) throws IOException {
         BasicStatusLine statusLine = new BasicStatusLine(HTTP_1_1, statusCode, null);

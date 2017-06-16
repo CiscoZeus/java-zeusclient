@@ -22,6 +22,7 @@ import java.util.*;
 public class ZeusAPIClient {
     private HttpClient client;
     private String accessToken;
+    private String bucketName;
 
     // TODO Configurable Endpoint
     private final static String ZEUS_API = "http://api.ciscozeus.io";
@@ -30,8 +31,14 @@ public class ZeusAPIClient {
      * @param token is either user token or bucket (external) token.
      */
     public ZeusAPIClient(String token) {
+        bucketName = null;
         accessToken = token;
         client = HttpClientBuilder.create().build();
+    }
+
+    public ZeusAPIClient bucket(String bucketFullName) {
+        bucketName = bucketFullName;
+        return this;
     }
 
     /**
@@ -172,6 +179,11 @@ public class ZeusAPIClient {
 
         request.setHeader("Authorization", String.format("Bearer %s", accessToken));
 
+        if (bucketName != null) {
+            request.setHeader("Bucket-Name", bucketName);
+            bucketName = null;
+        }
+
         for (Map.Entry<String, String> entry : header.entrySet()) {
             request.setHeader(entry.getKey(), entry.getValue());
         }
@@ -203,7 +215,7 @@ public class ZeusAPIClient {
 
     /**
      * This method is for mocking the request/response of API call.
-     *
+     * <p>
      * TODO Mock HttpClient.execute(HttpRequestBase) instead, and remove this function.
      *
      * @param request to be used by HttpClient
