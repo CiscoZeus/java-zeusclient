@@ -9,23 +9,34 @@ Java client for [Cisco Zeus](http://www.ciscozeus.io/). This allows us to send a
 
 
 ## How to get started
+
 Refer src/examples/ZeusSampleClient.java for a quick introduction. 
 Edit the file to add your assigned Zeus access token and execute the following commands to post/get sample logs & metrics.
 
-```
+```shell
 git clone https://github.com/CiscoZeus/java-zeusclient.git
 mvn compile
 mvn -q exec:java -Dexec.mainClass="com.cisco.zeus.ZeusSampleClient"
 ```
+
 For more advanced options and examples, refer files in the src/test directory.
 
 ## Usage
-###Metrics
+
 ```java
-import com.cisco.zeus.*;
-ZeusAPIClient zeusClient = new ZeusAPIClient("your_token_here");
+import com.cisco.zeus.ZeusAPIClient;
+ZeusAPIClient zeusClient = new ZeusAPIClient("your-access-token");
 ```
-#####Post Metrics
+
+```java
+// For BucketName Header
+zeusClient.bucket("organization-name/bucket-name").Methods()
+```
+
+### Metrics
+
+#### Post Metrics
+
 Metric name has to start with an alphanumerical variable and it can contain hyphen(-), dot(.) and underscore(_).
 
 ```java
@@ -38,8 +49,10 @@ String result = zeusClient.sendMetrics(metric);
 System.out.println(result);
 ```
 
-#####List All Metrics
+#### List All Metrics
+
 For more information about parameters, please refer to [Cisco Zeus API Doc](http://www.ciscozeus.io/)
+
 ```java
 Parameters params = new Parameters();
 // params.add("metric_name", "metric_name_regex");
@@ -47,8 +60,10 @@ String result = zeusClient.retrieveMetricNames(params);
 System.out.println(result);
 ```
 
-#####Get Metric Values
+#### Get Metric Values
+
 For more information about parameters, please refer to [Cisco Zeus API Doc](http://www.ciscozeus.io/)
+
 ```java
 Parameters params = new Parameters();
 // params.add("metric_name", "metric_name_regex");
@@ -56,16 +71,17 @@ String result = zeusClient.retrieveMetricValues(params);
 System.out.println(result); 
 ```
 
-
-#####Delete Metric
+#### Delete Metric
 
 ```java
 String result = zeusClient.deleteMetrics("your_metric_name_here");
 System.out.println(result); 
 ```
-###Logs
 
-#####Post Logs
+### Logs
+
+#### Post Logs
+
 Log name must contain only alphanumerical characters.
 
 ```java
@@ -84,8 +100,10 @@ String result = zeusClient.sendLogs(loglist);
 System.out.println(result); 
 ```
 
-#####Get Logs
+#### Get Logs
+
 For more information about parameters, please refer to [Cisco Zeus API Doc](http://www.ciscozeus.io/)
+
 ```java
 Parameters params = new Parameters();
 // params.add("log_name", "regular expression to filtering result");

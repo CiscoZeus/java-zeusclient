@@ -1,32 +1,28 @@
 package com.cisco.zeus;
 
-import java.util.*;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
+import java.util.ArrayList;
 
-public class LogList {
-    
-    JSONArray list = new JSONArray();
-    String logName = "";
-    public LogList(String name){
+
+public class  LogList {
+    private ArrayList<Log> list;
+    String logName;
+
+    public LogList(String name) {
+        list = new ArrayList<>();
         logName = name;
     }
 
-    public LogList(Log log){
-        list.add(log.data);
-    }
-
-    public LogList addLog(Log log){
-        list.add(log.data);
-        return this;
-    }
-    
-    public LogList build(){
+    public LogList add(Log log) {
+        list.add(log);
         return this;
     }
 
-    public void clear(){
-        list = new JSONArray();
+    public LogList build() {
+        return this;
+    }
+
+    public void clear() {
+        list = new ArrayList<>();
     }
 
     @Override
@@ -34,6 +30,3 @@ public class LogList {
         return list.toString();
     }
 }
-
-
-
